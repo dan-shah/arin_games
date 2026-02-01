@@ -1,0 +1,1968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Math Defender: Block Invasion</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #1a1a2e;
+      font-family: 'Press Start 2P', cursive;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    #game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #top-hud {
+      display: flex;
+      justify-content: space-between;
+      width: 1020px;
+      padding: 10px 20px;
+      background: rgba(30, 30, 30, 0.9);
+      border: 4px solid #444;
+      border-radius: 8px;
+    }
+
+    .hud-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #fff;
+      font-size: 12px;
+    }
+
+    .hud-item .icon {
+      font-size: 18px;
+    }
+
+    .hearts {
+      color: #ff4444;
+    }
+
+    .gold {
+      color: #ffcc00;
+    }
+
+    .energy {
+      color: #44aaff;
+    }
+
+    .wave {
+      color: #00ff00;
+    }
+
+    .energy-bar-container {
+      width: 100px;
+      height: 16px;
+      background: #333;
+      border: 2px solid #555;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .energy-bar {
+      height: 100%;
+      background: linear-gradient(to right, #2266aa, #44aaff);
+      transition: width 0.2s;
+    }
+
+    .energy-bar.low {
+      background: linear-gradient(to right, #aa2222, #ff4444);
+      animation: pulse 0.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    #main-area {
+      display: flex;
+      gap: 10px;
+    }
+
+    #game-canvas {
+      border: 4px solid #444;
+      border-radius: 8px;
+      cursor: crosshair;
+      image-rendering: pixelated;
+    }
+
+    #side-panel {
+      width: 220px;
+      background: rgba(30, 30, 30, 0.9);
+      border: 4px solid #444;
+      border-radius: 8px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .panel-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .panel-section h2 {
+      color: #00ff00;
+      font-size: 10px;
+      text-align: center;
+    }
+
+    #difficulty-tabs {
+      display: flex;
+      gap: 5px;
+      justify-content: center;
+    }
+
+    .difficulty-tab {
+      padding: 8px 10px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 8px;
+      background: #3a3a4a;
+      color: #888;
+      border: 2px solid #555;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .difficulty-tab:hover {
+      background: #4a4a5a;
+    }
+
+    .difficulty-tab.active {
+      border-color: currentColor;
+    }
+
+    .difficulty-tab.easy {
+      color: #44aa44;
+    }
+
+    .difficulty-tab.medium {
+      color: #aaaa44;
+    }
+
+    .difficulty-tab.hard {
+      color: #aa4444;
+    }
+
+    .difficulty-tab.active.easy {
+      background: rgba(68, 170, 68, 0.3);
+    }
+
+    .difficulty-tab.active.medium {
+      background: rgba(170, 170, 68, 0.3);
+    }
+
+    .difficulty-tab.active.hard {
+      background: rgba(170, 68, 68, 0.3);
+    }
+
+    #math-problem {
+      color: #fff;
+      font-size: 20px;
+      text-align: center;
+      min-height: 35px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #reward-display {
+      color: #ffcc00;
+      font-size: 8px;
+      text-align: center;
+    }
+
+    #answer-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .answer-btn {
+      padding: 15px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 16px;
+      background: #4a4a6a;
+      color: #fff;
+      border: 3px solid #666;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+
+    .answer-btn:hover {
+      background: #5a5a8a;
+      transform: scale(1.03);
+    }
+
+    .answer-btn:active {
+      transform: scale(0.97);
+    }
+
+    #turret-selection {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .turret-btn {
+      padding: 10px 5px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 7px;
+      background: #3a3a4a;
+      color: #aaa;
+      border: 2px solid #555;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .turret-btn:hover {
+      background: #4a4a5a;
+    }
+
+    .turret-btn.selected {
+      border-color: #ffcc00;
+      background: rgba(255, 204, 0, 0.2);
+      color: #fff;
+    }
+
+    .turret-btn.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .turret-btn .turret-icon {
+      display: block;
+      width: 24px;
+      height: 24px;
+      margin: 0 auto 5px;
+      border-radius: 4px;
+    }
+
+    .turret-btn .turret-cost {
+      color: #ffcc00;
+      font-size: 6px;
+    }
+
+    #selected-turret-info {
+      color: #aaa;
+      font-size: 7px;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    #game-over-modal, #victory-modal, #upgrade-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    #game-over-content, #victory-content, #upgrade-content {
+      background: rgba(30, 30, 30, 0.95);
+      border: 4px solid #ff4444;
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+      min-width: 280px;
+    }
+
+    #victory-content {
+      border-color: #00ff00;
+    }
+
+    #upgrade-content {
+      border-color: #ffcc00;
+    }
+
+    #game-over-content h1, #victory-content h1, #upgrade-content h1 {
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    #game-over-content h1 {
+      color: #ff4444;
+    }
+
+    #victory-content h1 {
+      color: #00ff00;
+    }
+
+    #upgrade-content h1 {
+      color: #ffcc00;
+    }
+
+    #game-over-content p, #victory-content p, #upgrade-content p {
+      color: #fff;
+      font-size: 10px;
+      margin-bottom: 10px;
+    }
+
+    .modal-btn {
+      padding: 12px 20px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 10px;
+      background: #00aa00;
+      color: #fff;
+      border: 3px solid #008800;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 5px;
+    }
+
+    .modal-btn:hover {
+      background: #00cc00;
+    }
+
+    .modal-btn.sell {
+      background: #aa4444;
+      border-color: #882222;
+    }
+
+    .modal-btn.sell:hover {
+      background: #cc4444;
+    }
+
+    .modal-btn.close {
+      background: #555;
+      border-color: #444;
+    }
+
+    .modal-btn.close:hover {
+      background: #666;
+    }
+
+    #upgrade-stats {
+      text-align: left;
+      margin: 15px 0;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 6px;
+    }
+
+    #upgrade-stats p {
+      margin: 5px 0;
+      font-size: 9px;
+    }
+
+    .stat-label {
+      color: #888;
+    }
+
+    .stat-value {
+      color: #fff;
+    }
+
+    .stat-upgrade {
+      color: #44ff44;
+    }
+
+    .flash-correct {
+      animation: flashGreen 0.3s ease-out;
+    }
+
+    .flash-incorrect {
+      animation: flashRed 0.3s ease-out;
+    }
+
+    @keyframes flashGreen {
+      0% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.8); }
+      50% { box-shadow: 0 0 30px 10px rgba(0, 255, 0, 0.6); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0); }
+    }
+
+    @keyframes flashRed {
+      0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.8); }
+      50% { box-shadow: 0 0 30px 10px rgba(255, 0, 0, 0.6); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+    }
+
+    .shake {
+      animation: shake 0.3s ease-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-10px); }
+      40% { transform: translateX(10px); }
+      60% { transform: translateX(-10px); }
+      80% { transform: translateX(10px); }
+    }
+
+    /* Title Screen */
+    #title-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at center, #1a1a2e 0%, #0d0d1a 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+    }
+
+    #title-screen h1 {
+      font-size: 42px;
+      color: #00ff00;
+      text-shadow: 0 0 20px #00ff00;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    #title-screen .subtitle {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 40px;
+    }
+
+    #title-screen .instructions {
+      font-size: 11px;
+      color: #aaa;
+      text-align: center;
+      line-height: 2.2;
+      margin-bottom: 40px;
+      max-width: 500px;
+    }
+
+    #title-screen .start-btn {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 16px;
+      padding: 20px 50px;
+      background: linear-gradient(to bottom, #00aa00, #006600);
+      color: white;
+      border: 4px solid #00ff00;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-shadow: 0 0 10px #00ff00;
+      box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+    }
+
+    #title-screen .start-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 50px rgba(0, 255, 0, 0.5);
+    }
+
+    #title-screen .preview-icons {
+      font-size: 40px;
+      margin-bottom: 30px;
+      display: flex;
+      gap: 20px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Title Screen -->
+  <div id="title-screen">
+    <div class="preview-icons">🏰 ➕ ➖ ✖️ 🛡️</div>
+    <h1>Math Defender</h1>
+    <div class="subtitle">Solve math to defend your base</div>
+    <div class="instructions">
+      Solve math problems to earn gold and energy<br>
+      Place turrets to stop the invaders<br>
+      Turrets can't be placed near your base!<br>
+      Survive all 15 waves to win
+    </div>
+    <button class="start-btn" id="title-start-btn">Start</button>
+  </div>
+
+  <div id="game-container">
+    <div id="top-hud">
+      <div class="hud-item hearts">
+        <span class="icon">&#x2764;</span>
+        <span id="hearts-display">10</span>
+      </div>
+      <div class="hud-item gold">
+        <span class="icon">&#x2B50;</span>
+        <span id="gold-display">100</span>
+      </div>
+      <div class="hud-item energy">
+        <span class="icon">&#x26A1;</span>
+        <div class="energy-bar-container">
+          <div class="energy-bar" id="energy-bar"></div>
+        </div>
+        <span id="energy-display">100</span>
+      </div>
+      <div class="hud-item wave">
+        <span class="icon">&#x1F30A;</span>
+        <span>Wave: </span>
+        <span id="wave-display">1</span>
+        <span>/</span>
+        <span id="max-wave-display">15</span>
+      </div>
+    </div>
+
+    <div id="main-area">
+      <canvas id="game-canvas" width="800" height="560"></canvas>
+
+      <div id="side-panel">
+        <div class="panel-section">
+          <h2>MATH MINING</h2>
+          <div id="difficulty-tabs">
+            <button class="difficulty-tab easy active" data-difficulty="easy">Easy</button>
+            <button class="difficulty-tab medium" data-difficulty="medium">Med</button>
+            <button class="difficulty-tab hard" data-difficulty="hard">Hard</button>
+          </div>
+          <div id="math-problem">3 + 2 = ?</div>
+          <div id="reward-display">+25 gold, +15 energy</div>
+          <div id="answer-buttons">
+            <button class="answer-btn" data-answer="0">5</button>
+            <button class="answer-btn" data-answer="1">4</button>
+            <button class="answer-btn" data-answer="2">6</button>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <h2>SELECT TURRET</h2>
+          <div id="turret-selection">
+            <button class="turret-btn selected" data-type="basic">
+              <span class="turret-icon" style="background: #6b4423;"></span>
+              Basic
+              <span class="turret-cost">100g</span>
+            </button>
+            <button class="turret-btn" data-type="sniper">
+              <span class="turret-icon" style="background: #2244aa;"></span>
+              Sniper
+              <span class="turret-cost">200g</span>
+            </button>
+            <button class="turret-btn" data-type="rapid">
+              <span class="turret-icon" style="background: #aa4422;"></span>
+              Rapid
+              <span class="turret-cost">175g</span>
+            </button>
+            <button class="turret-btn" data-type="splash">
+              <span class="turret-icon" style="background: #22aa44;"></span>
+              Splash
+              <span class="turret-cost">250g</span>
+            </button>
+          </div>
+          <div id="selected-turret-info">
+            Balanced turret<br>
+            Click grass to place
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="game-over-modal">
+    <div id="game-over-content">
+      <h1>GAME OVER</h1>
+      <p>The enemies invaded your base!</p>
+      <p>You reached Wave <span id="final-wave">1</span></p>
+      <button class="modal-btn" id="restart-btn">PLAY AGAIN</button>
+    </div>
+  </div>
+
+  <div id="victory-modal">
+    <div id="victory-content">
+      <h1>VICTORY!</h1>
+      <p>You defended against all waves!</p>
+      <button class="modal-btn" id="restart-btn-victory">PLAY AGAIN</button>
+    </div>
+  </div>
+
+  <div id="upgrade-modal">
+    <div id="upgrade-content">
+      <h1 id="upgrade-title">BASIC TURRET</h1>
+      <div id="upgrade-stats">
+        <p><span class="stat-label">Level:</span> <span class="stat-value" id="stat-level">1</span></p>
+        <p><span class="stat-label">Damage:</span> <span class="stat-value" id="stat-damage">1</span> <span class="stat-upgrade" id="stat-damage-upgrade"></span></p>
+        <p><span class="stat-label">Range:</span> <span class="stat-value" id="stat-range">100</span> <span class="stat-upgrade" id="stat-range-upgrade"></span></p>
+        <p><span class="stat-label">Fire Rate:</span> <span class="stat-value" id="stat-firerate">1.0/s</span> <span class="stat-upgrade" id="stat-firerate-upgrade"></span></p>
+      </div>
+      <button class="modal-btn" id="upgrade-btn">UPGRADE - 75g</button>
+      <button class="modal-btn sell" id="sell-btn">SELL - 50g</button>
+      <button class="modal-btn close" id="close-upgrade-btn">CLOSE</button>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // CONFIGURATION
+    // ============================================
+    const CONFIG = {
+      // Canvas
+      CANVAS_WIDTH: 800,
+      CANVAS_HEIGHT: 560,
+      GRID_SIZE: 40,
+
+      // Economy
+      STARTING_GOLD: 100,
+
+      // Player
+      STARTING_HEARTS: 10,
+
+      // Energy
+      STARTING_ENERGY: 100,
+      MAX_ENERGY: 100,
+      ENERGY_REGEN: 0,  // No passive regen - must solve math problems!
+      WRONG_ANSWER_DRAIN: 15,
+
+      // Base protection zone (no turrets allowed near base)
+      BASE_X: 760,
+      BASE_Y: 280,
+      BASE_EXCLUSION_RADIUS: 120,  // ~3 tiles around base
+
+      // Projectile
+      PROJECTILE_SPEED: 6,
+
+      // Waves
+      MAX_WAVES: 15,
+      ENEMIES_PER_WAVE_BASE: 8,
+      ENEMY_SPAWN_INTERVAL: 2000
+    };
+
+    // ============================================
+    // MULTIPLE PATHS SYSTEM
+    // ============================================
+    const PATHS = {
+      top: [
+        { x: -40, y: 40 },
+        { x: 200, y: 40 },
+        { x: 200, y: 120 },
+        { x: 400, y: 120 },
+        { x: 400, y: 200 },
+        { x: 700, y: 200 },
+        { x: 700, y: 280 },
+        { x: 760, y: 280 }
+      ],
+      middle: [
+        { x: -40, y: 240 },
+        { x: 160, y: 240 },
+        { x: 160, y: 320 },
+        { x: 320, y: 320 },
+        { x: 320, y: 280 },
+        { x: 560, y: 280 },
+        { x: 560, y: 280 },
+        { x: 760, y: 280 }
+      ],
+      bottom: [
+        { x: -40, y: 440 },
+        { x: 120, y: 440 },
+        { x: 120, y: 360 },
+        { x: 280, y: 360 },
+        { x: 280, y: 400 },
+        { x: 480, y: 400 },
+        { x: 480, y: 280 },
+        { x: 760, y: 280 }
+      ]
+    };
+
+    const PATH_COLORS = {
+      top: '#8B5A2B',
+      middle: '#7a4a1f',
+      bottom: '#6a3a0f'
+    };
+
+    // Calculate path tiles for all routes
+    function getPathTiles() {
+      const tiles = new Map();
+
+      for (const [pathId, waypoints] of Object.entries(PATHS)) {
+        for (let i = 0; i < waypoints.length - 1; i++) {
+          const start = waypoints[i];
+          const end = waypoints[i + 1];
+
+          const startTileX = Math.floor(start.x / CONFIG.GRID_SIZE);
+          const startTileY = Math.floor(start.y / CONFIG.GRID_SIZE);
+          const endTileX = Math.floor(end.x / CONFIG.GRID_SIZE);
+          const endTileY = Math.floor(end.y / CONFIG.GRID_SIZE);
+
+          if (startTileX === endTileX) {
+            const minY = Math.min(startTileY, endTileY);
+            const maxY = Math.max(startTileY, endTileY);
+            for (let y = minY; y <= maxY; y++) {
+              const key = `${startTileX},${y}`;
+              if (!tiles.has(key)) tiles.set(key, pathId);
+            }
+          } else {
+            const minX = Math.min(startTileX, endTileX);
+            const maxX = Math.max(startTileX, endTileX);
+            for (let x = minX; x <= maxX; x++) {
+              const key = `${x},${startTileY}`;
+              if (!tiles.has(key)) tiles.set(key, pathId);
+            }
+          }
+        }
+      }
+      return tiles;
+    }
+
+    const PATH_TILES = getPathTiles();
+
+    // ============================================
+    // TURRET TYPES
+    // ============================================
+    const TURRET_TYPES = {
+      basic: {
+        name: 'Basic',
+        cost: 100,
+        range: 100,
+        damage: 1,
+        fireRate: 1000,
+        energyCost: 2,
+        color: '#6b4423',
+        description: 'Balanced turret'
+      },
+      sniper: {
+        name: 'Sniper',
+        cost: 200,
+        range: 200,
+        damage: 3,
+        fireRate: 2000,
+        energyCost: 4,
+        color: '#2244aa',
+        description: 'Long range, high damage'
+      },
+      rapid: {
+        name: 'Rapid',
+        cost: 175,
+        range: 80,
+        damage: 1,
+        fireRate: 300,
+        energyCost: 1,
+        color: '#aa4422',
+        description: 'Fast fire, short range'
+      },
+      splash: {
+        name: 'Splash',
+        cost: 250,
+        range: 100,
+        damage: 2,
+        fireRate: 1500,
+        energyCost: 3,
+        splashRadius: 50,
+        color: '#22aa44',
+        description: 'Area damage'
+      }
+    };
+
+    // ============================================
+    // TURRET UPGRADES
+    // ============================================
+    const UPGRADE_COSTS = [0, 75, 150];
+    const UPGRADE_MULTIPLIERS = {
+      damage: [1, 1.5, 2.5],
+      range: [1, 1.2, 1.4],
+      fireRate: [1, 0.85, 0.7]
+    };
+
+    // ============================================
+    // ENEMY TYPES
+    // ============================================
+    const ENEMY_TYPES = {
+      normal: {
+        name: 'Creeper',
+        health: 3,
+        speed: 0.6,
+        color: '#5cb85c',
+        faceColor: '#2d5a2d',
+        reward: 10,
+        size: 32
+      },
+      fast: {
+        name: 'Runner',
+        health: 2,
+        speed: 1.2,
+        color: '#5bc0de',
+        faceColor: '#2d606f',
+        reward: 15,
+        size: 28
+      },
+      tank: {
+        name: 'Golem',
+        health: 10,
+        speed: 0.3,
+        color: '#777777',
+        faceColor: '#444444',
+        reward: 25,
+        size: 40
+      },
+      healer: {
+        name: 'Shaman',
+        health: 4,
+        speed: 0.5,
+        color: '#ff69b4',
+        faceColor: '#993366',
+        reward: 20,
+        size: 32,
+        healRadius: 60,
+        healAmount: 0.5
+      },
+      boss: {
+        name: 'Wither',
+        health: 50,
+        speed: 0.2,
+        color: '#333333',
+        faceColor: '#111111',
+        reward: 100,
+        size: 48
+      }
+    };
+
+    // ============================================
+    // MATH DIFFICULTY TIERS
+    // ============================================
+    const MATH_TIERS = {
+      easy: {
+        label: 'Easy',
+        color: '#44aa44',
+        reward: 25,
+        energyRestore: 15,
+        generate: () => {
+          const a = Math.floor(Math.random() * 9) + 1;
+          const b = Math.floor(Math.random() * 9) + 1;
+          return { text: `${a} + ${b} = ?`, answer: a + b };
+        }
+      },
+      medium: {
+        label: 'Medium',
+        color: '#aaaa44',
+        reward: 50,
+        energyRestore: 30,
+        generate: () => {
+          const ops = ['+', '-'];
+          const op = ops[Math.floor(Math.random() * ops.length)];
+          let a, b, answer;
+          if (op === '+') {
+            a = Math.floor(Math.random() * 15) + 5;
+            b = Math.floor(Math.random() * 15) + 5;
+            answer = a + b;
+          } else {
+            a = Math.floor(Math.random() * 15) + 10;
+            b = Math.floor(Math.random() * Math.min(a, 15)) + 1;
+            answer = a - b;
+          }
+          return { text: `${a} ${op} ${b} = ?`, answer };
+        }
+      },
+      hard: {
+        label: 'Hard',
+        color: '#aa4444',
+        reward: 100,
+        energyRestore: 50,
+        generate: () => {
+          const type = Math.floor(Math.random() * 3);
+          let a, b, answer, text;
+          if (type === 0) {
+            // Multiplication
+            a = Math.floor(Math.random() * 10) + 2;
+            b = Math.floor(Math.random() * 10) + 2;
+            answer = a * b;
+            text = `${a} × ${b} = ?`;
+          } else if (type === 1) {
+            // Larger addition
+            a = Math.floor(Math.random() * 50) + 20;
+            b = Math.floor(Math.random() * 50) + 20;
+            answer = a + b;
+            text = `${a} + ${b} = ?`;
+          } else {
+            // Larger subtraction
+            a = Math.floor(Math.random() * 50) + 50;
+            b = Math.floor(Math.random() * 40) + 10;
+            answer = a - b;
+            text = `${a} - ${b} = ?`;
+          }
+          return { text, answer };
+        }
+      }
+    };
+
+    // ============================================
+    // GAME STATE
+    // ============================================
+    let gameState = {
+      gold: CONFIG.STARTING_GOLD,
+      hearts: CONFIG.STARTING_HEARTS,
+      energy: CONFIG.STARTING_ENERGY,
+      maxEnergy: CONFIG.MAX_ENERGY,
+      wave: 1,
+      enemies: [],
+      turrets: [],
+      projectiles: [],
+      mathProblem: null,
+      isGameOver: false,
+      isPaused: false,
+      enemiesSpawned: 0,
+      enemiesPerWave: CONFIG.ENEMIES_PER_WAVE_BASE,
+      spawnTimer: 0,
+      waveInProgress: false,
+      selectedTurretType: 'basic',
+      selectedDifficulty: 'easy',
+      selectedTurret: null
+    };
+
+    // ============================================
+    // CANVAS SETUP
+    // ============================================
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // ============================================
+    // UI ELEMENTS
+    // ============================================
+    const heartsDisplay = document.getElementById('hearts-display');
+    const goldDisplay = document.getElementById('gold-display');
+    const energyDisplay = document.getElementById('energy-display');
+    const energyBar = document.getElementById('energy-bar');
+    const waveDisplay = document.getElementById('wave-display');
+    const maxWaveDisplay = document.getElementById('max-wave-display');
+    const mathProblemDisplay = document.getElementById('math-problem');
+    const rewardDisplay = document.getElementById('reward-display');
+    const answerButtons = document.querySelectorAll('.answer-btn');
+    const difficultyTabs = document.querySelectorAll('.difficulty-tab');
+    const turretButtons = document.querySelectorAll('.turret-btn');
+    const selectedTurretInfo = document.getElementById('selected-turret-info');
+    const gameOverModal = document.getElementById('game-over-modal');
+    const victoryModal = document.getElementById('victory-modal');
+    const upgradeModal = document.getElementById('upgrade-modal');
+    const finalWaveDisplay = document.getElementById('final-wave');
+    const restartBtn = document.getElementById('restart-btn');
+    const restartBtnVictory = document.getElementById('restart-btn-victory');
+    const sidePanel = document.getElementById('side-panel');
+
+    // Upgrade modal elements
+    const upgradeTitle = document.getElementById('upgrade-title');
+    const statLevel = document.getElementById('stat-level');
+    const statDamage = document.getElementById('stat-damage');
+    const statRange = document.getElementById('stat-range');
+    const statFirerate = document.getElementById('stat-firerate');
+    const statDamageUpgrade = document.getElementById('stat-damage-upgrade');
+    const statRangeUpgrade = document.getElementById('stat-range-upgrade');
+    const statFirerateUpgrade = document.getElementById('stat-firerate-upgrade');
+    const upgradeBtn = document.getElementById('upgrade-btn');
+    const sellBtn = document.getElementById('sell-btn');
+    const closeUpgradeBtn = document.getElementById('close-upgrade-btn');
+
+    // ============================================
+    // MATH SYSTEM
+    // ============================================
+    function generateMathProblem() {
+      const tier = MATH_TIERS[gameState.selectedDifficulty];
+      const problem = tier.generate();
+
+      const wrongAnswers = generateWrongAnswers(problem.answer);
+      const allAnswers = [problem.answer, ...wrongAnswers];
+      shuffleArray(allAnswers);
+
+      gameState.mathProblem = {
+        text: problem.text,
+        correctAnswer: problem.answer,
+        answers: allAnswers,
+        tier: gameState.selectedDifficulty
+      };
+
+      updateMathDisplay();
+    }
+
+    function generateWrongAnswers(correct) {
+      const wrong = [];
+      const offsets = [-3, -2, -1, 1, 2, 3, 4, -4, 5, -5];
+      shuffleArray(offsets);
+
+      for (const offset of offsets) {
+        const wrongAnswer = correct + offset;
+        if (wrongAnswer > 0 && wrongAnswer !== correct && !wrong.includes(wrongAnswer)) {
+          wrong.push(wrongAnswer);
+          if (wrong.length === 2) break;
+        }
+      }
+
+      while (wrong.length < 2) {
+        const rand = Math.floor(Math.random() * 50) + 1;
+        if (rand !== correct && !wrong.includes(rand)) {
+          wrong.push(rand);
+        }
+      }
+
+      return wrong;
+    }
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function updateMathDisplay() {
+      mathProblemDisplay.textContent = gameState.mathProblem.text;
+      const tier = MATH_TIERS[gameState.selectedDifficulty];
+      rewardDisplay.textContent = `+${tier.reward} gold, +${tier.energyRestore} energy`;
+
+      answerButtons.forEach((btn, index) => {
+        btn.textContent = gameState.mathProblem.answers[index];
+        btn.dataset.answer = gameState.mathProblem.answers[index];
+      });
+    }
+
+    function checkAnswer(selectedAnswer) {
+      if (gameState.isGameOver) return;
+
+      const correct = parseInt(selectedAnswer) === gameState.mathProblem.correctAnswer;
+      const tier = MATH_TIERS[gameState.mathProblem.tier];
+
+      if (correct) {
+        gameState.gold += tier.reward;
+        gameState.energy = Math.min(gameState.maxEnergy, gameState.energy + tier.energyRestore);
+        updateUI();
+        sidePanel.classList.add('flash-correct');
+        setTimeout(() => sidePanel.classList.remove('flash-correct'), 300);
+      } else {
+        gameState.energy = Math.max(0, gameState.energy - CONFIG.WRONG_ANSWER_DRAIN);
+        updateUI();
+        canvas.classList.add('shake');
+        sidePanel.classList.add('flash-incorrect');
+        setTimeout(() => {
+          canvas.classList.remove('shake');
+          sidePanel.classList.remove('flash-incorrect');
+        }, 300);
+      }
+
+      generateMathProblem();
+    }
+
+    // ============================================
+    // ENEMY SYSTEM
+    // ============================================
+    function getEnemyTypeForWave(wave) {
+      const types = [];
+
+      // Always include normal
+      types.push('normal', 'normal', 'normal');
+
+      // Wave 4+: Add fast
+      if (wave >= 4) {
+        types.push('fast', 'fast');
+      }
+
+      // Wave 6+: Add tank
+      if (wave >= 6) {
+        types.push('tank');
+      }
+
+      // Wave 8+: Add healer
+      if (wave >= 8) {
+        types.push('healer');
+      }
+
+      // Wave 10, 15: Boss wave
+      if (wave === 10 || wave === 15) {
+        return 'boss';
+      }
+
+      return types[Math.floor(Math.random() * types.length)];
+    }
+
+    function spawnEnemy() {
+      const pathIds = Object.keys(PATHS);
+      const pathId = pathIds[Math.floor(Math.random() * pathIds.length)];
+      const waypoints = PATHS[pathId];
+
+      const enemyType = getEnemyTypeForWave(gameState.wave);
+      const typeData = ENEMY_TYPES[enemyType];
+
+      const healthScale = 1 + (gameState.wave - 1) * 0.15;
+      const speedScale = 1 + (gameState.wave - 1) * 0.05;
+
+      const enemy = {
+        x: waypoints[0].x,
+        y: waypoints[0].y,
+        pathId: pathId,
+        waypointIndex: 0,
+        health: Math.ceil(typeData.health * healthScale),
+        maxHealth: Math.ceil(typeData.health * healthScale),
+        speed: typeData.speed * speedScale,
+        size: typeData.size,
+        type: enemyType,
+        color: typeData.color,
+        faceColor: typeData.faceColor,
+        reward: typeData.reward,
+        healRadius: typeData.healRadius || 0,
+        healAmount: typeData.healAmount || 0,
+        id: Date.now() + Math.random()
+      };
+
+      gameState.enemies.push(enemy);
+      gameState.enemiesSpawned++;
+    }
+
+    function updateEnemy(enemy, deltaTime) {
+      const waypoints = PATHS[enemy.pathId];
+
+      if (enemy.waypointIndex >= waypoints.length - 1) {
+        enemyReachedBase(enemy);
+        return;
+      }
+
+      const target = waypoints[enemy.waypointIndex + 1];
+      const dx = target.x - enemy.x;
+      const dy = target.y - enemy.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < enemy.speed) {
+        enemy.x = target.x;
+        enemy.y = target.y;
+        enemy.waypointIndex++;
+      } else {
+        enemy.x += (dx / distance) * enemy.speed;
+        enemy.y += (dy / distance) * enemy.speed;
+      }
+
+      // Healer ability
+      if (enemy.healRadius > 0 && enemy.healAmount > 0) {
+        for (const other of gameState.enemies) {
+          if (other.id !== enemy.id) {
+            const dx = other.x - enemy.x;
+            const dy = other.y - enemy.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist <= enemy.healRadius && other.health < other.maxHealth) {
+              other.health = Math.min(other.maxHealth, other.health + enemy.healAmount * (deltaTime / 1000));
+            }
+          }
+        }
+      }
+    }
+
+    function enemyReachedBase(enemy) {
+      gameState.hearts--;
+      updateUI();
+      removeEnemy(enemy);
+
+      if (gameState.hearts <= 0) {
+        gameOver();
+      }
+    }
+
+    function removeEnemy(enemy) {
+      const index = gameState.enemies.indexOf(enemy);
+      if (index > -1) {
+        gameState.enemies.splice(index, 1);
+      }
+    }
+
+    function damageEnemy(enemy, damage, splash = false) {
+      enemy.health -= damage;
+      if (enemy.health <= 0) {
+        gameState.gold += enemy.reward;
+        updateUI();
+        removeEnemy(enemy);
+      }
+    }
+
+    // ============================================
+    // TURRET SYSTEM
+    // ============================================
+    function placeTurret(gridX, gridY) {
+      const typeData = TURRET_TYPES[gameState.selectedTurretType];
+      if (gameState.gold < typeData.cost) return false;
+      if (!isValidPlacement(gridX, gridY)) return false;
+
+      const turret = {
+        x: gridX * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2,
+        y: gridY * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2,
+        gridX: gridX,
+        gridY: gridY,
+        angle: 0,
+        lastFired: 0,
+        type: gameState.selectedTurretType,
+        level: 1,
+        totalInvested: typeData.cost,
+        id: Date.now()
+      };
+
+      gameState.turrets.push(turret);
+      gameState.gold -= typeData.cost;
+      updateUI();
+      return true;
+    }
+
+    function getTurretStats(turret) {
+      const baseStats = TURRET_TYPES[turret.type];
+      const levelIndex = turret.level - 1;
+
+      return {
+        damage: Math.ceil(baseStats.damage * UPGRADE_MULTIPLIERS.damage[levelIndex]),
+        range: Math.ceil(baseStats.range * UPGRADE_MULTIPLIERS.range[levelIndex]),
+        fireRate: Math.ceil(baseStats.fireRate * UPGRADE_MULTIPLIERS.fireRate[levelIndex]),
+        energyCost: baseStats.energyCost,
+        splashRadius: baseStats.splashRadius || 0,
+        color: baseStats.color,
+        name: baseStats.name
+      };
+    }
+
+    function upgradeTurret(turret) {
+      if (turret.level >= 3) return false;
+
+      const cost = UPGRADE_COSTS[turret.level];
+      if (gameState.gold < cost) return false;
+
+      gameState.gold -= cost;
+      turret.totalInvested += cost;
+      turret.level++;
+      updateUI();
+      return true;
+    }
+
+    function sellTurret(turret) {
+      const sellValue = Math.floor(turret.totalInvested * 0.5);
+      gameState.gold += sellValue;
+
+      const index = gameState.turrets.indexOf(turret);
+      if (index > -1) {
+        gameState.turrets.splice(index, 1);
+      }
+
+      updateUI();
+    }
+
+    function isValidPlacement(gridX, gridY) {
+      if (PATH_TILES.has(`${gridX},${gridY}`)) return false;
+
+      for (const turret of gameState.turrets) {
+        if (turret.gridX === gridX && turret.gridY === gridY) return false;
+      }
+
+      if (gridX < 0 || gridX >= CONFIG.CANVAS_WIDTH / CONFIG.GRID_SIZE) return false;
+      if (gridY < 0 || gridY >= CONFIG.CANVAS_HEIGHT / CONFIG.GRID_SIZE) return false;
+
+      // Check base exclusion zone - can't place turrets too close to the base
+      const tileX = gridX * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2;
+      const tileY = gridY * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2;
+      const dx = tileX - CONFIG.BASE_X;
+      const dy = tileY - CONFIG.BASE_Y;
+      const distanceToBase = Math.sqrt(dx * dx + dy * dy);
+      if (distanceToBase < CONFIG.BASE_EXCLUSION_RADIUS) return false;
+
+      return true;
+    }
+
+    function updateTurret(turret, timestamp) {
+      const stats = getTurretStats(turret);
+
+      // Check energy
+      if (gameState.energy < stats.energyCost) return;
+
+      // Find nearest enemy in range
+      let nearestEnemy = null;
+      let nearestDistance = Infinity;
+
+      for (const enemy of gameState.enemies) {
+        const dx = enemy.x - turret.x;
+        const dy = enemy.y - turret.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance <= stats.range && distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestEnemy = enemy;
+        }
+      }
+
+      if (nearestEnemy) {
+        const dx = nearestEnemy.x - turret.x;
+        const dy = nearestEnemy.y - turret.y;
+        turret.angle = Math.atan2(dy, dx);
+
+        if (timestamp - turret.lastFired >= stats.fireRate) {
+          if (gameState.energy >= stats.energyCost) {
+            fireProjectile(turret, nearestEnemy, stats);
+            turret.lastFired = timestamp;
+            gameState.energy -= stats.energyCost;
+          }
+        }
+      }
+    }
+
+    // ============================================
+    // PROJECTILE SYSTEM
+    // ============================================
+    function fireProjectile(turret, target, stats) {
+      const projectile = {
+        x: turret.x,
+        y: turret.y,
+        targetId: target.id,
+        speed: CONFIG.PROJECTILE_SPEED,
+        damage: stats.damage,
+        splashRadius: stats.splashRadius,
+        size: 8,
+        turretType: turret.type
+      };
+      gameState.projectiles.push(projectile);
+    }
+
+    function updateProjectile(proj) {
+      const target = gameState.enemies.find(e => e.id === proj.targetId);
+
+      if (!target) {
+        removeProjectile(proj);
+        return;
+      }
+
+      const dx = target.x - proj.x;
+      const dy = target.y - proj.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < proj.speed + target.size / 2) {
+        // Hit!
+        if (proj.splashRadius > 0) {
+          // Splash damage
+          for (const enemy of [...gameState.enemies]) {
+            const edx = enemy.x - target.x;
+            const edy = enemy.y - target.y;
+            const edist = Math.sqrt(edx * edx + edy * edy);
+            if (edist <= proj.splashRadius) {
+              damageEnemy(enemy, proj.damage, true);
+            }
+          }
+        } else {
+          damageEnemy(target, proj.damage);
+        }
+        removeProjectile(proj);
+      } else {
+        proj.x += (dx / distance) * proj.speed;
+        proj.y += (dy / distance) * proj.speed;
+      }
+
+      if (proj.x < -50 || proj.x > CONFIG.CANVAS_WIDTH + 50 ||
+          proj.y < -50 || proj.y > CONFIG.CANVAS_HEIGHT + 50) {
+        removeProjectile(proj);
+      }
+    }
+
+    function removeProjectile(proj) {
+      const index = gameState.projectiles.indexOf(proj);
+      if (index > -1) {
+        gameState.projectiles.splice(index, 1);
+      }
+    }
+
+    // ============================================
+    // WAVE SYSTEM
+    // ============================================
+    function startWave(waveNum) {
+      gameState.wave = waveNum;
+      gameState.enemiesSpawned = 0;
+      gameState.enemiesPerWave = CONFIG.ENEMIES_PER_WAVE_BASE + Math.floor(waveNum * 1.5);
+
+      // Boss waves have fewer but stronger enemies
+      if (waveNum === 10 || waveNum === 15) {
+        gameState.enemiesPerWave = 1 + Math.floor(waveNum / 3);
+      }
+
+      gameState.waveInProgress = true;
+      gameState.spawnTimer = 0;
+      updateUI();
+    }
+
+    function checkWaveComplete() {
+      if (!gameState.waveInProgress) return;
+
+      if (gameState.enemiesSpawned >= gameState.enemiesPerWave &&
+          gameState.enemies.length === 0) {
+        gameState.waveInProgress = false;
+
+        if (gameState.wave >= CONFIG.MAX_WAVES) {
+          victory();
+        } else {
+          setTimeout(() => {
+            if (!gameState.isGameOver) {
+              startWave(gameState.wave + 1);
+            }
+          }, 2000);
+        }
+      }
+    }
+
+    // ============================================
+    // RENDERING
+    // ============================================
+    function drawGrid() {
+      ctx.fillStyle = '#4a7c23';
+      ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+
+      ctx.strokeStyle = '#3d6b1c';
+      ctx.lineWidth = 1;
+
+      for (let x = 0; x <= CONFIG.CANVAS_WIDTH; x += CONFIG.GRID_SIZE) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, CONFIG.CANVAS_HEIGHT);
+        ctx.stroke();
+      }
+
+      for (let y = 0; y <= CONFIG.CANVAS_HEIGHT; y += CONFIG.GRID_SIZE) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(CONFIG.CANVAS_WIDTH, y);
+        ctx.stroke();
+      }
+    }
+
+    function drawPaths() {
+      for (const [tileKey, pathId] of PATH_TILES) {
+        const [x, y] = tileKey.split(',').map(Number);
+        if (x >= 0) {
+          ctx.fillStyle = PATH_COLORS[pathId];
+          ctx.fillRect(
+            x * CONFIG.GRID_SIZE,
+            y * CONFIG.GRID_SIZE,
+            CONFIG.GRID_SIZE,
+            CONFIG.GRID_SIZE
+          );
+
+          // Texture
+          ctx.fillStyle = adjustColor(PATH_COLORS[pathId], -20);
+          ctx.fillRect(x * CONFIG.GRID_SIZE + 5, y * CONFIG.GRID_SIZE + 5, 8, 8);
+          ctx.fillRect(x * CONFIG.GRID_SIZE + 25, y * CONFIG.GRID_SIZE + 20, 6, 6);
+        }
+      }
+    }
+
+    function adjustColor(hex, amount) {
+      const num = parseInt(hex.slice(1), 16);
+      const r = Math.max(0, Math.min(255, (num >> 16) + amount));
+      const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amount));
+      const b = Math.max(0, Math.min(255, (num & 0x0000FF) + amount));
+      return `#${(1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1)}`;
+    }
+
+    function drawBase() {
+      const baseX = CONFIG.BASE_X;
+      const baseY = CONFIG.BASE_Y;
+
+      // Draw exclusion zone (no-build area)
+      ctx.fillStyle = 'rgba(255, 50, 50, 0.1)';
+      ctx.beginPath();
+      ctx.arc(baseX, baseY, CONFIG.BASE_EXCLUSION_RADIUS, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(255, 100, 100, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8, 8]);
+      ctx.beginPath();
+      ctx.arc(baseX, baseY, CONFIG.BASE_EXCLUSION_RADIUS, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#cc4444';
+      ctx.fillRect(baseX - 15, baseY - 30, 30, 50);
+
+      ctx.fillStyle = 'rgba(255, 100, 100, 0.3)';
+      ctx.beginPath();
+      ctx.arc(baseX, baseY - 5, 35, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ff6666';
+      ctx.fillRect(baseX - 10, baseY - 40, 20, 15);
+    }
+
+    function drawTurret(turret) {
+      const stats = getTurretStats(turret);
+      const levelScale = 1 + (turret.level - 1) * 0.15;
+      const baseSize = 16 * levelScale;
+
+      ctx.save();
+      ctx.translate(turret.x, turret.y);
+
+      // Base
+      const baseColor = adjustColor(stats.color, turret.level * 15);
+      ctx.fillStyle = baseColor;
+      ctx.fillRect(-baseSize, -baseSize, baseSize * 2, baseSize * 2);
+
+      // Inner detail
+      ctx.fillStyle = adjustColor(stats.color, -20);
+      ctx.fillRect(-baseSize + 4, -baseSize + 4, (baseSize - 4) * 2, (baseSize - 4) * 2);
+
+      // Level indicator
+      ctx.fillStyle = '#ffcc00';
+      for (let i = 0; i < turret.level; i++) {
+        ctx.fillRect(-baseSize + 2 + i * 6, baseSize - 6, 4, 4);
+      }
+
+      // Barrel (rotates)
+      ctx.rotate(turret.angle);
+      ctx.fillStyle = adjustColor(stats.color, -30);
+      ctx.fillRect(0, -4 * levelScale, 24 * levelScale, 8 * levelScale);
+
+      ctx.fillStyle = adjustColor(stats.color, -40);
+      ctx.fillRect(20 * levelScale, -5 * levelScale, 6 * levelScale, 10 * levelScale);
+
+      ctx.restore();
+
+      // Selected turret range indicator
+      if (gameState.selectedTurret === turret) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(turret.x, turret.y, stats.range, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
+    function drawEnemy(enemy) {
+      const x = enemy.x;
+      const y = enemy.y;
+      const size = enemy.size;
+
+      // Body
+      ctx.fillStyle = enemy.color;
+      ctx.fillRect(x - size / 2, y - size / 2, size, size);
+
+      // Face
+      ctx.fillStyle = enemy.faceColor;
+      const faceScale = size / 32;
+
+      // Eyes
+      ctx.fillRect(x - 10 * faceScale, y - 8 * faceScale, 6 * faceScale, 6 * faceScale);
+      ctx.fillRect(x + 4 * faceScale, y - 8 * faceScale, 6 * faceScale, 6 * faceScale);
+
+      // Mouth
+      ctx.fillRect(x - 4 * faceScale, y + 2 * faceScale, 8 * faceScale, 4 * faceScale);
+      ctx.fillRect(x - 6 * faceScale, y + 6 * faceScale, 4 * faceScale, 6 * faceScale);
+      ctx.fillRect(x + 2 * faceScale, y + 6 * faceScale, 4 * faceScale, 6 * faceScale);
+
+      // Boss crown
+      if (enemy.type === 'boss') {
+        ctx.fillStyle = '#ffcc00';
+        ctx.fillRect(x - 15, y - size / 2 - 12, 30, 8);
+        ctx.fillRect(x - 12, y - size / 2 - 18, 6, 10);
+        ctx.fillRect(x - 3, y - size / 2 - 18, 6, 10);
+        ctx.fillRect(x + 6, y - size / 2 - 18, 6, 10);
+      }
+
+      // Healer aura
+      if (enemy.healRadius > 0) {
+        ctx.strokeStyle = 'rgba(255, 105, 180, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y, enemy.healRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Health bar
+      const healthBarWidth = size;
+      const healthBarHeight = 4;
+      const healthPercent = enemy.health / enemy.maxHealth;
+
+      ctx.fillStyle = '#333';
+      ctx.fillRect(x - healthBarWidth / 2, y - size / 2 - 10, healthBarWidth, healthBarHeight);
+
+      ctx.fillStyle = healthPercent > 0.5 ? '#00ff00' : healthPercent > 0.25 ? '#ffff00' : '#ff0000';
+      ctx.fillRect(x - healthBarWidth / 2, y - size / 2 - 10, healthBarWidth * healthPercent, healthBarHeight);
+    }
+
+    function drawProjectile(proj) {
+      const typeData = TURRET_TYPES[proj.turretType];
+      ctx.fillStyle = typeData ? adjustColor(typeData.color, 60) : '#ffcc00';
+      ctx.fillRect(proj.x - proj.size / 2, proj.y - proj.size / 2, proj.size, proj.size);
+
+      ctx.fillStyle = typeData ? adjustColor(typeData.color, 80) + '66' : 'rgba(255, 200, 0, 0.4)';
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, proj.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+
+      drawGrid();
+      drawPaths();
+      drawBase();
+
+      for (const turret of gameState.turrets) {
+        drawTurret(turret);
+      }
+
+      for (const enemy of gameState.enemies) {
+        drawEnemy(enemy);
+      }
+
+      for (const proj of gameState.projectiles) {
+        drawProjectile(proj);
+      }
+
+      // Low energy warning
+      if (gameState.energy < 20) {
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+        ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+
+        ctx.fillStyle = '#ff4444';
+        ctx.font = '16px "Press Start 2P"';
+        ctx.textAlign = 'center';
+        ctx.fillText('LOW ENERGY!', CONFIG.CANVAS_WIDTH / 2, 30);
+      }
+    }
+
+    // ============================================
+    // UI UPDATE
+    // ============================================
+    function updateUI() {
+      heartsDisplay.textContent = gameState.hearts;
+      goldDisplay.textContent = gameState.gold;
+      energyDisplay.textContent = Math.floor(gameState.energy);
+      waveDisplay.textContent = gameState.wave;
+      maxWaveDisplay.textContent = CONFIG.MAX_WAVES;
+
+      const energyPercent = (gameState.energy / gameState.maxEnergy) * 100;
+      energyBar.style.width = energyPercent + '%';
+
+      if (gameState.energy < 20) {
+        energyBar.classList.add('low');
+      } else {
+        energyBar.classList.remove('low');
+      }
+
+      // Update turret button states
+      turretButtons.forEach(btn => {
+        const type = btn.dataset.type;
+        const cost = TURRET_TYPES[type].cost;
+        btn.classList.toggle('disabled', gameState.gold < cost);
+      });
+    }
+
+    function updateSelectedTurretInfo() {
+      const typeData = TURRET_TYPES[gameState.selectedTurretType];
+      selectedTurretInfo.innerHTML = `${typeData.description}<br>Cost: <span style="color: #ffcc00">${typeData.cost}g</span>`;
+    }
+
+    // ============================================
+    // UPGRADE MODAL
+    // ============================================
+    function showUpgradeModal(turret) {
+      gameState.selectedTurret = turret;
+      const stats = getTurretStats(turret);
+      const typeData = TURRET_TYPES[turret.type];
+
+      upgradeTitle.textContent = `${stats.name.toUpperCase()} TURRET Lv.${turret.level}`;
+      statLevel.textContent = turret.level;
+      statDamage.textContent = stats.damage;
+      statRange.textContent = stats.range;
+      statFirerate.textContent = (1000 / stats.fireRate).toFixed(1) + '/s';
+
+      if (turret.level < 3) {
+        const nextLevel = turret.level;
+        const nextDamage = Math.ceil(typeData.damage * UPGRADE_MULTIPLIERS.damage[nextLevel]);
+        const nextRange = Math.ceil(typeData.range * UPGRADE_MULTIPLIERS.range[nextLevel]);
+        const nextFireRate = Math.ceil(typeData.fireRate * UPGRADE_MULTIPLIERS.fireRate[nextLevel]);
+
+        statDamageUpgrade.textContent = `→ ${nextDamage}`;
+        statRangeUpgrade.textContent = `→ ${nextRange}`;
+        statFirerateUpgrade.textContent = `→ ${(1000 / nextFireRate).toFixed(1)}/s`;
+
+        const cost = UPGRADE_COSTS[turret.level];
+        upgradeBtn.textContent = `UPGRADE - ${cost}g`;
+        upgradeBtn.style.display = 'inline-block';
+        upgradeBtn.classList.toggle('disabled', gameState.gold < cost);
+      } else {
+        statDamageUpgrade.textContent = '(MAX)';
+        statRangeUpgrade.textContent = '(MAX)';
+        statFirerateUpgrade.textContent = '(MAX)';
+        upgradeBtn.style.display = 'none';
+      }
+
+      const sellValue = Math.floor(turret.totalInvested * 0.5);
+      sellBtn.textContent = `SELL - ${sellValue}g`;
+
+      upgradeModal.style.display = 'flex';
+    }
+
+    function hideUpgradeModal() {
+      upgradeModal.style.display = 'none';
+      gameState.selectedTurret = null;
+    }
+
+    // ============================================
+    // GAME FLOW
+    // ============================================
+    function gameOver() {
+      gameState.isGameOver = true;
+      finalWaveDisplay.textContent = gameState.wave;
+      gameOverModal.style.display = 'flex';
+    }
+
+    function victory() {
+      gameState.isGameOver = true;
+      victoryModal.style.display = 'flex';
+    }
+
+    function resetGame() {
+      gameStarted = true;
+      gameState = {
+        gold: CONFIG.STARTING_GOLD,
+        hearts: CONFIG.STARTING_HEARTS,
+        energy: CONFIG.STARTING_ENERGY,
+        maxEnergy: CONFIG.MAX_ENERGY,
+        wave: 1,
+        enemies: [],
+        turrets: [],
+        projectiles: [],
+        mathProblem: null,
+        isGameOver: false,
+        isPaused: false,
+        enemiesSpawned: 0,
+        enemiesPerWave: CONFIG.ENEMIES_PER_WAVE_BASE,
+        spawnTimer: 0,
+        waveInProgress: false,
+        selectedTurretType: 'basic',
+        selectedDifficulty: 'easy',
+        selectedTurret: null
+      };
+
+      // Reset UI selections
+      turretButtons.forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.type === 'basic');
+      });
+      difficultyTabs.forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.difficulty === 'easy');
+      });
+
+      updateUI();
+      updateSelectedTurretInfo();
+      generateMathProblem();
+      gameOverModal.style.display = 'none';
+      victoryModal.style.display = 'none';
+      hideUpgradeModal();
+      startWave(1);
+    }
+
+    // ============================================
+    // GAME LOOP
+    // ============================================
+    let lastTimestamp = 0;
+
+    function gameLoop(timestamp) {
+      if (!gameStarted || gameState.isGameOver) {
+        requestAnimationFrame(gameLoop);
+        return;
+      }
+
+      const deltaTime = timestamp - lastTimestamp;
+      lastTimestamp = timestamp;
+
+      // Energy regeneration
+      gameState.energy = Math.min(gameState.maxEnergy, gameState.energy + CONFIG.ENERGY_REGEN * (deltaTime / 1000));
+
+      // Spawn enemies
+      if (gameState.waveInProgress && gameState.enemiesSpawned < gameState.enemiesPerWave) {
+        gameState.spawnTimer += deltaTime;
+        const spawnInterval = Math.max(800, CONFIG.ENEMY_SPAWN_INTERVAL - (gameState.wave * 50));
+
+        if (gameState.spawnTimer >= spawnInterval) {
+          spawnEnemy();
+          gameState.spawnTimer = 0;
+        }
+      }
+
+      // Update enemies
+      for (const enemy of [...gameState.enemies]) {
+        updateEnemy(enemy, deltaTime);
+      }
+
+      // Update turrets
+      for (const turret of gameState.turrets) {
+        updateTurret(turret, timestamp);
+      }
+
+      // Update projectiles
+      for (const proj of [...gameState.projectiles]) {
+        updateProjectile(proj);
+      }
+
+      // Check wave completion
+      checkWaveComplete();
+
+      // Update UI (energy bar)
+      updateUI();
+
+      // Render
+      render();
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // ============================================
+    // EVENT LISTENERS
+    // ============================================
+    canvas.addEventListener('click', (e) => {
+      if (gameState.isGameOver) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const gridX = Math.floor(x / CONFIG.GRID_SIZE);
+      const gridY = Math.floor(y / CONFIG.GRID_SIZE);
+
+      // Check if clicking on existing turret
+      for (const turret of gameState.turrets) {
+        if (turret.gridX === gridX && turret.gridY === gridY) {
+          showUpgradeModal(turret);
+          return;
+        }
+      }
+
+      placeTurret(gridX, gridY);
+    });
+
+    answerButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        checkAnswer(btn.dataset.answer);
+      });
+    });
+
+    difficultyTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        gameState.selectedDifficulty = tab.dataset.difficulty;
+        difficultyTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        generateMathProblem();
+      });
+    });
+
+    turretButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        gameState.selectedTurretType = btn.dataset.type;
+        turretButtons.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        updateSelectedTurretInfo();
+      });
+    });
+
+    upgradeBtn.addEventListener('click', () => {
+      if (gameState.selectedTurret) {
+        if (upgradeTurret(gameState.selectedTurret)) {
+          showUpgradeModal(gameState.selectedTurret);
+        }
+      }
+    });
+
+    sellBtn.addEventListener('click', () => {
+      if (gameState.selectedTurret) {
+        sellTurret(gameState.selectedTurret);
+        hideUpgradeModal();
+      }
+    });
+
+    closeUpgradeBtn.addEventListener('click', hideUpgradeModal);
+
+    restartBtn.addEventListener('click', resetGame);
+    restartBtnVictory.addEventListener('click', resetGame);
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (gameState.isGameOver) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const gridX = Math.floor(x / CONFIG.GRID_SIZE);
+      const gridY = Math.floor(y / CONFIG.GRID_SIZE);
+
+      render();
+
+      const typeData = TURRET_TYPES[gameState.selectedTurretType];
+
+      // Check if hovering over existing turret
+      for (const turret of gameState.turrets) {
+        if (turret.gridX === gridX && turret.gridY === gridY) {
+          ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(
+            gridX * CONFIG.GRID_SIZE + 2,
+            gridY * CONFIG.GRID_SIZE + 2,
+            CONFIG.GRID_SIZE - 4,
+            CONFIG.GRID_SIZE - 4
+          );
+          return;
+        }
+      }
+
+      if (isValidPlacement(gridX, gridY) && gameState.gold >= typeData.cost) {
+        ctx.fillStyle = 'rgba(100, 200, 100, 0.4)';
+        ctx.fillRect(
+          gridX * CONFIG.GRID_SIZE,
+          gridY * CONFIG.GRID_SIZE,
+          CONFIG.GRID_SIZE,
+          CONFIG.GRID_SIZE
+        );
+
+        // Show range preview
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.beginPath();
+        ctx.arc(
+          gridX * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2,
+          gridY * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2,
+          typeData.range,
+          0, Math.PI * 2
+        );
+        ctx.stroke();
+      } else if (!isValidPlacement(gridX, gridY)) {
+        ctx.fillStyle = 'rgba(200, 100, 100, 0.3)';
+        ctx.fillRect(
+          gridX * CONFIG.GRID_SIZE,
+          gridY * CONFIG.GRID_SIZE,
+          CONFIG.GRID_SIZE,
+          CONFIG.GRID_SIZE
+        );
+      }
+    });
+
+    // ============================================
+    // TITLE SCREEN
+    // ============================================
+    const titleScreen = document.getElementById('title-screen');
+    const titleStartBtn = document.getElementById('title-start-btn');
+    let gameStarted = false;
+
+    titleStartBtn.addEventListener('click', () => {
+      titleScreen.style.display = 'none';
+      gameStarted = true;
+      startWave(1);
+      requestAnimationFrame(gameLoop);
+    });
+
+    // ============================================
+    // INITIALIZE GAME
+    // ============================================
+    updateSelectedTurretInfo();
+    generateMathProblem();
+    updateUI();
+    // Don't start wave or game loop until title screen is dismissed
+  </script>
+</body>
+</html>

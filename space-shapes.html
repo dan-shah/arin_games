@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Shapes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard', cursive;
+            overflow: hidden;
+            height: 100vh;
+            background: linear-gradient(135deg, #0a0015 0%, #150025 50%, #0a0015 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            height: 100vh;
+            max-height: 700px;
+            margin: 20px auto;
+            overflow: hidden;
+            background: radial-gradient(ellipse at center, #1a0033 0%, #0d001a 50%, #000 100%);
+            border-radius: 20px;
+            border: 3px solid rgba(150, 100, 255, 0.4);
+            box-shadow: 0 0 40px rgba(100, 50, 200, 0.3);
+        }
+
+        /* Stars */
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .star.twinkle {
+            animation: twinkle 2s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* Nebula clouds */
+        .nebula {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        /* Shooting stars */
+        .shooting-star {
+            position: absolute;
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(to right, transparent, white);
+            animation: shoot 1s linear forwards;
+            pointer-events: none;
+        }
+
+        @keyframes shoot {
+            0% { transform: translateX(0) translateY(0); opacity: 1; }
+            100% { transform: translateX(-300px) translateY(300px); opacity: 0; }
+        }
+
+        /* HUD */
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 150;
+            background: linear-gradient(to bottom, rgba(20, 10, 40, 0.9), transparent);
+        }
+
+        .hud-box {
+            background: rgba(100, 50, 150, 0.6);
+            padding: 6px 12px;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            border: 2px solid rgba(200, 150, 255, 0.5);
+            text-shadow: 0 0 10px rgba(200, 150, 255, 0.5);
+        }
+
+        #timer-container {
+            width: 120px;
+            height: 16px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid rgba(200, 150, 255, 0.5);
+        }
+
+        #timer-bar {
+            height: 100%;
+            background: linear-gradient(to right, #ff00ff, #00ffff);
+            transition: width 0.1s linear;
+            width: 100%;
+            box-shadow: 0 0 10px #ff00ff;
+        }
+
+        #timer-bar.warning {
+            background: linear-gradient(to right, #ff0000, #ff6600);
+            animation: pulse 0.3s ease-in-out infinite;
+            box-shadow: 0 0 15px #ff0000;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Question area */
+        #question-box {
+            position: absolute;
+            top: 55px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(80, 40, 140, 0.95), rgba(40, 20, 80, 0.95));
+            padding: 15px 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 4px solid #ffcc00;
+            box-shadow: 0 0 25px rgba(255, 200, 0, 0.5), inset 0 0 20px rgba(255, 200, 0, 0.1);
+            z-index: 100;
+            animation: questionPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes questionPulse {
+            0%, 100% { box-shadow: 0 0 25px rgba(255, 200, 0, 0.5), inset 0 0 20px rgba(255, 200, 0, 0.1); }
+            50% { box-shadow: 0 0 35px rgba(255, 200, 0, 0.7), inset 0 0 25px rgba(255, 200, 0, 0.15); }
+        }
+
+        #question-box .question {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffcc00;
+            text-shadow: 0 0 15px rgba(255, 200, 0, 0.8), 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #question-box .shape-preview {
+            font-size: 36px;
+            display: inline;
+            margin-left: 12px;
+            vertical-align: middle;
+        }
+
+        /* Game field */
+        #game-field {
+            position: absolute;
+            top: 120px;
+            left: 30px;
+            right: 30px;
+            bottom: 120px;
+            border: 3px solid rgba(100, 50, 150, 0.4);
+            border-radius: 20px;
+            background: rgba(20, 10, 40, 0.3);
+            overflow: hidden;
+        }
+
+        #scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, transparent, #00ffff, transparent);
+            box-shadow: 0 0 20px #00ffff;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #scan-line.active {
+            animation: scan 0.5s ease-out;
+        }
+
+        @keyframes scan {
+            0% { top: 0; opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        /* Floating shapes */
+        .shape-container {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+        }
+
+        .shape-container:hover {
+            transform: scale(1.2);
+        }
+
+        .shape-container.counted {
+            animation: countPop 0.5s ease-out;
+        }
+
+        @keyframes countPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); filter: brightness(2); }
+            100% { transform: scale(1); }
+        }
+
+        .shape {
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+
+        /* Answer buttons */
+        #answers {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .answer-btn {
+            width: 70px;
+            height: 70px;
+            font-family: inherit;
+            font-size: 32px;
+            font-weight: bold;
+            background: linear-gradient(to bottom, rgba(100, 50, 150, 0.8), rgba(50, 20, 80, 0.9));
+            color: white;
+            border: 3px solid rgba(200, 150, 255, 0.6);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 15px rgba(100, 50, 150, 0.5);
+        }
+
+        .answer-btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(150, 100, 255, 0.6);
+            border-color: #00ffff;
+        }
+
+        .answer-btn:active {
+            transform: translateY(0) scale(0.95);
+        }
+
+        .answer-btn.correct {
+            background: linear-gradient(to bottom, #00ff88, #00aa55);
+            border-color: #00ff88;
+            animation: correctPulse 0.5s ease-out;
+        }
+
+        .answer-btn.wrong {
+            background: linear-gradient(to bottom, #ff4444, #aa0000);
+            border-color: #ff4444;
+            animation: wrongShake 0.5s ease-out;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        /* Combo display */
+        #combo {
+            position: absolute;
+            top: 125px;
+            right: 20px;
+            font-size: 22px;
+            color: #00ffff;
+            text-shadow: 0 0 15px #00ffff;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 100;
+        }
+
+        #combo.show {
+            opacity: 1;
+            animation: comboGlow 0.5s ease-out;
+        }
+
+        @keyframes comboGlow {
+            0% { transform: scale(0.5); text-shadow: 0 0 30px #00ffff; }
+            50% { transform: scale(1.3); text-shadow: 0 0 50px #00ffff; }
+            100% { transform: scale(1); text-shadow: 0 0 15px #00ffff; }
+        }
+
+        /* Feedback */
+        #feedback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #feedback.correct {
+            color: #00ff88;
+            text-shadow: 0 0 30px #00ff88;
+            animation: feedbackUp 0.8s ease-out forwards;
+        }
+
+        #feedback.wrong {
+            color: #ff4444;
+            text-shadow: 0 0 30px #ff4444;
+            animation: feedbackShake 0.8s ease-out forwards;
+        }
+
+        @keyframes feedbackUp {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -80%) scale(1); }
+        }
+
+        @keyframes feedbackShake {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            40% { transform: translate(-55%, -50%); }
+            60% { transform: translate(-45%, -50%); }
+            80% { transform: translate(-52%, -50%); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        /* Points popup */
+        .points-popup {
+            position: absolute;
+            font-size: 26px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 15px #ffd700;
+            pointer-events: none;
+            z-index: 150;
+            animation: floatUp 1s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-60px) scale(1.2); }
+        }
+
+        /* Screens */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            background: radial-gradient(ellipse at center, #1a0033 0%, #0d001a 50%, #000 100%);
+        }
+
+        .screen h1 {
+            font-size: 48px;
+            color: #00ffff;
+            text-shadow: 0 0 30px #00ffff, 0 0 60px #ff00ff;
+            margin-bottom: 8px;
+        }
+
+        .screen .subtitle {
+            font-size: 18px;
+            color: #ff00ff;
+            text-shadow: 0 0 15px #ff00ff;
+            margin-bottom: 20px;
+        }
+
+        .screen .instructions {
+            font-size: 16px;
+            color: #ccc;
+            text-align: center;
+            margin-bottom: 25px;
+            line-height: 1.6;
+            padding: 0 20px;
+        }
+
+        .game-btn {
+            font-family: inherit;
+            font-size: 24px;
+            padding: 15px 45px;
+            background: linear-gradient(to bottom, #ff00ff, #aa00aa);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.5);
+            transition: all 0.3s;
+            text-shadow: 0 0 10px white;
+        }
+
+        .game-btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 0 50px rgba(255, 0, 255, 0.8);
+        }
+
+        /* End screen */
+        #end-screen .stats {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 20px;
+        }
+
+        #end-screen .stat {
+            text-align: center;
+        }
+
+        #end-screen .stat-value {
+            font-size: 36px;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+        }
+
+        #end-screen .stat-label {
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        #end-screen .stars-display {
+            font-size: 50px;
+            margin-bottom: 12px;
+        }
+
+        #end-screen .performance {
+            font-size: 28px;
+            color: #00ff88;
+            text-shadow: 0 0 20px #00ff88;
+            margin-bottom: 20px;
+        }
+
+        /* Rocket decoration */
+        .rocket-deco {
+            position: absolute;
+            font-size: 28px;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        #rocket-left {
+            bottom: 90px;
+            left: 8px;
+            transform: rotate(45deg);
+            animation: rocketBob 3s ease-in-out infinite;
+        }
+
+        #rocket-right {
+            bottom: 130px;
+            right: 8px;
+            transform: rotate(-30deg);
+            animation: rocketBob 3s ease-in-out infinite 1s;
+        }
+
+        @keyframes rocketBob {
+            0%, 100% { transform: translateY(0) rotate(45deg); }
+            50% { transform: translateY(-10px) rotate(45deg); }
+        }
+
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Decorations -->
+        <div class="rocket-deco" id="rocket-left">🚀</div>
+        <div class="rocket-deco" id="rocket-right">🛸</div>
+
+        <!-- HUD -->
+        <div id="hud">
+            <div class="hud-box">Score: <span id="score">0</span></div>
+            <div class="hud-box">
+                <div id="timer-container">
+                    <div id="timer-bar"></div>
+                </div>
+            </div>
+            <div class="hud-box">Round: <span id="round">1</span>/10</div>
+        </div>
+
+        <!-- Question -->
+        <div id="question-box">
+            <span class="question" id="question">Count the triangles!</span>
+            <span class="shape-preview" id="shape-preview">▲</span>
+        </div>
+
+        <!-- Combo -->
+        <div id="combo">🔥 COMBO x<span id="combo-count">2</span>!</div>
+
+        <!-- Game field -->
+        <div id="game-field">
+            <div id="scan-line"></div>
+        </div>
+
+        <!-- Answers -->
+        <div id="answers">
+            <button class="answer-btn" data-value="0">0</button>
+            <button class="answer-btn" data-value="1">1</button>
+            <button class="answer-btn" data-value="2">2</button>
+            <button class="answer-btn" data-value="3">3</button>
+        </div>
+
+        <!-- Feedback -->
+        <div id="feedback"></div>
+
+        <!-- Start screen -->
+        <div class="screen" id="start-screen">
+            <h1>Space Shapes</h1>
+            <div class="subtitle">Count the shapes before time runs out</div>
+            <div class="instructions">
+                Count the matching shapes before time runs out!<br>
+                10 rounds - each one gets harder.<br>
+                Build combos for bonus points!
+            </div>
+            <button class="game-btn" id="start-button">Start</button>
+        </div>
+
+        <!-- End screen -->
+        <div class="screen" id="end-screen" style="display: none;">
+            <h1>Game Over</h1>
+            <div class="stars-display" id="stars-display">⭐⭐⭐</div>
+            <div class="performance" id="performance">Perfect!</div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="final-score">0</div>
+                    <div class="stat-label">Points</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="final-correct">0</div>
+                    <div class="stat-label">Correct</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="final-accuracy">0%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="best-combo">0</div>
+                    <div class="stat-label">Best Combo</div>
+                </div>
+            </div>
+            <button class="game-btn" id="play-again">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // Shape definitions with SVG
+        const shapeTypes = [
+            {
+                name: 'circle',
+                displayName: 'circles',
+                emoji: '⚫',
+                colors: ['#ff4444', '#44ff44', '#4444ff', '#ffff44', '#ff44ff', '#44ffff'],
+                svg: (color, size) => `
+                    <svg width="${size}" height="${size}" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="40" fill="${color}" class="shape" style="color: ${color}"/>
+                    </svg>`
+            },
+            {
+                name: 'triangle',
+                displayName: 'triangles',
+                emoji: '▲',
+                colors: ['#ff6b6b', '#6bff6b', '#6b6bff', '#ffff6b', '#ff6bff', '#6bffff'],
+                svg: (color, size) => `
+                    <svg width="${size}" height="${size}" viewBox="0 0 100 100">
+                        <polygon points="50,10 90,90 10,90" fill="${color}" class="shape" style="color: ${color}"/>
+                    </svg>`
+            },
+            {
+                name: 'square',
+                displayName: 'squares',
+                emoji: '■',
+                colors: ['#ff5555', '#55ff55', '#5555ff', '#ffff55', '#ff55ff', '#55ffff'],
+                svg: (color, size) => `
+                    <svg width="${size}" height="${size}" viewBox="0 0 100 100">
+                        <rect x="15" y="15" width="70" height="70" fill="${color}" class="shape" style="color: ${color}"/>
+                    </svg>`
+            },
+            {
+                name: 'star',
+                displayName: 'stars',
+                emoji: '★',
+                colors: ['#ffd700', '#ffaa00', '#ffdd44', '#ffcc00', '#ff9900', '#ffee00'],
+                svg: (color, size) => `
+                    <svg width="${size}" height="${size}" viewBox="0 0 100 100">
+                        <polygon points="50,5 61,40 98,40 68,62 79,97 50,75 21,97 32,62 2,40 39,40" fill="${color}" class="shape" style="color: ${color}"/>
+                    </svg>`
+            },
+            {
+                name: 'diamond',
+                displayName: 'diamonds',
+                emoji: '◆',
+                colors: ['#00ffff', '#00ddff', '#00ffdd', '#44ffff', '#00bbff', '#00ffbb'],
+                svg: (color, size) => `
+                    <svg width="${size}" height="${size}" viewBox="0 0 100 100">
+                        <polygon points="50,5 95,50 50,95 5,50" fill="${color}" class="shape" style="color: ${color}"/>
+                    </svg>`
+            },
+            {
+                name: 'heart',
+                displayName: 'hearts',
+                emoji: '♥',
+                colors: ['#ff1493', '#ff69b4', '#ff0066', '#ff3366', '#ff0099', '#ff6699'],
+                svg: (color, size) => `
+                    <svg width="${size}" height="${size}" viewBox="0 0 100 100">
+                        <path d="M50,88 C20,60 5,40 5,25 C5,10 20,5 35,15 C42,20 47,25 50,32 C53,25 58,20 65,15 C80,5 95,10 95,25 C95,40 80,60 50,88" fill="${color}" class="shape" style="color: ${color}"/>
+                    </svg>`
+            },
+            {
+                name: 'pentagon',
+                displayName: 'pentagons',
+                emoji: '⬠',
+                colors: ['#ff8844', '#44ff88', '#8844ff', '#88ff44', '#ff4488', '#44ff44'],
+                svg: (color, size) => `
+                    <svg width="${size}" height="${size}" viewBox="0 0 100 100">
+                        <polygon points="50,5 97,36 79,91 21,91 3,36" fill="${color}" class="shape" style="color: ${color}"/>
+                    </svg>`
+            },
+            {
+                name: 'hexagon',
+                displayName: 'hexagons',
+                emoji: '⬡',
+                colors: ['#aa44ff', '#ff44aa', '#44aaff', '#aaff44', '#ffaa44', '#44ffaa'],
+                svg: (color, size) => `
+                    <svg width="${size}" height="${size}" viewBox="0 0 100 100">
+                        <polygon points="50,5 93,27 93,73 50,95 7,73 7,27" fill="${color}" class="shape" style="color: ${color}"/>
+                    </svg>`
+            },
+            {
+                name: 'rectangle',
+                displayName: 'rectangles',
+                emoji: '▬',
+                colors: ['#55aaff', '#ff55aa', '#aaff55', '#55ffaa', '#aa55ff', '#ffaa55'],
+                svg: (color, size) => `
+                    <svg width="${size}" height="${size}" viewBox="0 0 100 100">
+                        <rect x="10" y="30" width="80" height="40" fill="${color}" class="shape" style="color: ${color}"/>
+                    </svg>`
+            },
+            {
+                name: 'oval',
+                displayName: 'ovals',
+                emoji: '⬭',
+                colors: ['#66ffcc', '#cc66ff', '#ffcc66', '#66ccff', '#ff66cc', '#ccff66'],
+                svg: (color, size) => `
+                    <svg width="${size}" height="${size}" viewBox="0 0 100 100">
+                        <ellipse cx="50" cy="50" rx="42" ry="28" fill="${color}" class="shape" style="color: ${color}"/>
+                    </svg>`
+            },
+            {
+                name: 'crescent',
+                displayName: 'crescents',
+                emoji: '☽',
+                colors: ['#ffee88', '#88eeff', '#ee88ff', '#88ffee', '#ff88ee', '#eeff88'],
+                svg: (color, size) => `
+                    <svg width="${size}" height="${size}" viewBox="0 0 100 100">
+                        <path d="M60,10 A40,40 0 1,1 60,90 A30,30 0 1,0 60,10" fill="${color}" class="shape" style="color: ${color}"/>
+                    </svg>`
+            },
+            {
+                name: 'cross',
+                displayName: 'crosses',
+                emoji: '✚',
+                colors: ['#ff6666', '#66ff66', '#6666ff', '#ffff66', '#ff66ff', '#66ffff'],
+                svg: (color, size) => `
+                    <svg width="${size}" height="${size}" viewBox="0 0 100 100">
+                        <polygon points="35,10 65,10 65,35 90,35 90,65 65,65 65,90 35,90 35,65 10,65 10,35 35,35" fill="${color}" class="shape" style="color: ${color}"/>
+                    </svg>`
+            },
+            {
+                name: 'arrow',
+                displayName: 'arrows',
+                emoji: '➤',
+                colors: ['#77ddff', '#ff77dd', '#ddff77', '#77ffdd', '#dd77ff', '#ffdd77'],
+                svg: (color, size) => `
+                    <svg width="${size}" height="${size}" viewBox="0 0 100 100">
+                        <polygon points="90,50 40,10 40,35 10,35 10,65 40,65 40,90" fill="${color}" class="shape" style="color: ${color}"/>
+                    </svg>`
+            },
+            {
+                name: 'octagon',
+                displayName: 'octagons',
+                emoji: '⯃',
+                colors: ['#ff5588', '#55ff88', '#8855ff', '#88ff55', '#ff8855', '#5588ff'],
+                svg: (color, size) => `
+                    <svg width="${size}" height="${size}" viewBox="0 0 100 100">
+                        <polygon points="30,10 70,10 95,30 95,70 70,90 30,90 5,70 5,30" fill="${color}" class="shape" style="color: ${color}"/>
+                    </svg>`
+            }
+        ];
+
+        // Game state
+        let state = {
+            score: 0,
+            round: 1,
+            maxRounds: 10,
+            combo: 0,
+            maxCombo: 0,
+            correctCount: 0,
+            timer: 100,
+            timerMax: 100,
+            gameRunning: false,
+            roundActive: false,
+            shapes: [],
+            targetShape: null,
+            correctAnswer: 0,
+            answerOptions: []
+        };
+
+        // Round difficulty settings - difficulty scales with round number
+        function getRoundSettings(round) {
+            return {
+                totalShapes: Math.min(8 + round, 16),           // 9 shapes round 1 -> 16 by round 8
+                timerSpeed: 0.10 + (round * 0.015),             // Gets faster each round
+                basePoints: 100 + (round * 10),                  // More points in later rounds
+                shapeSize: Math.max(55 - round * 2, 38),        // Slightly smaller each round
+                moveSpeed: 0.25 + (round * 0.08),               // Faster movement each round
+                shapesAvailable: Math.min(4 + Math.floor(round / 2), shapeTypes.length)  // More shape types
+            };
+        }
+
+        // DOM elements
+        const container = document.getElementById('game-container');
+        const gameField = document.getElementById('game-field');
+        const scoreEl = document.getElementById('score');
+        const roundEl = document.getElementById('round');
+        const questionEl = document.getElementById('question');
+        const shapePreviewEl = document.getElementById('shape-preview');
+        const timerBar = document.getElementById('timer-bar');
+        const feedbackEl = document.getElementById('feedback');
+        const comboEl = document.getElementById('combo');
+        const comboCountEl = document.getElementById('combo-count');
+        const scanLine = document.getElementById('scan-line');
+        const answersContainer = document.getElementById('answers');
+        const startScreen = document.getElementById('start-screen');
+        const endScreen = document.getElementById('end-screen');
+
+        // Create starry background
+        function createStars() {
+            // Regular stars
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star' + (Math.random() > 0.7 ? ' twinkle' : '');
+                star.style.width = (1 + Math.random() * 2) + 'px';
+                star.style.height = star.style.width;
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(star);
+            }
+
+            // Nebula clouds
+            const nebulaColors = ['#ff00ff', '#00ffff', '#ff0066', '#6600ff'];
+            for (let i = 0; i < 3; i++) {
+                const nebula = document.createElement('div');
+                nebula.className = 'nebula';
+                nebula.style.width = (200 + Math.random() * 300) + 'px';
+                nebula.style.height = (200 + Math.random() * 300) + 'px';
+                nebula.style.left = Math.random() * 100 + '%';
+                nebula.style.top = Math.random() * 100 + '%';
+                nebula.style.background = nebulaColors[Math.floor(Math.random() * nebulaColors.length)];
+                container.appendChild(nebula);
+            }
+        }
+
+        // Create shooting star effect
+        function createShootingStar() {
+            if (!state.gameRunning || Math.random() > 0.02) return;
+
+            const star = document.createElement('div');
+            star.className = 'shooting-star';
+            star.style.left = (50 + Math.random() * 50) + '%';
+            star.style.top = Math.random() * 50 + '%';
+            container.appendChild(star);
+            setTimeout(() => star.remove(), 1000);
+        }
+
+        // Create a shape
+        function createShape(shapeType, x, y, size) {
+            const div = document.createElement('div');
+            div.className = 'shape-container';
+            div.style.left = x + 'px';
+            div.style.top = y + 'px';
+            div.style.width = size + 'px';
+            div.style.height = size + 'px';
+
+            const color = shapeType.colors[Math.floor(Math.random() * shapeType.colors.length)];
+            div.innerHTML = shapeType.svg(color, size);
+            div.dataset.shape = shapeType.name;
+
+            gameField.appendChild(div);
+
+            const settings = getRoundSettings(state.round);
+            return {
+                element: div,
+                x,
+                y,
+                vx: (Math.random() - 0.5) * settings.moveSpeed * 2,
+                vy: (Math.random() - 0.5) * settings.moveSpeed * 2,
+                type: shapeType.name,
+                size
+            };
+        }
+
+        // Setup new round
+        function setupRound() {
+            // Clear old shapes
+            state.shapes.forEach(s => s.element.remove());
+            state.shapes = [];
+
+            const settings = getRoundSettings(state.round);
+            const fieldRect = gameField.getBoundingClientRect();
+            const fieldWidth = fieldRect.width - settings.shapeSize - 20;
+            const fieldHeight = fieldRect.height - settings.shapeSize - 20;
+
+            // Pick available shapes for this level
+            const availableShapes = shapeTypes.slice(0, settings.shapesAvailable);
+
+            // Pick target shape
+            state.targetShape = availableShapes[Math.floor(Math.random() * availableShapes.length)];
+
+            // Decide how many of target shape (1-4 for answers, but weight toward variety)
+            const maxTarget = Math.min(4, Math.floor(settings.totalShapes / 2));
+            state.correctAnswer = Math.floor(Math.random() * (maxTarget + 1));
+
+            // Create shapes
+            let targetCount = 0;
+            const positions = [];
+
+            for (let i = 0; i < settings.totalShapes; i++) {
+                let shapeType;
+
+                // Ensure we get exactly correctAnswer target shapes
+                const remainingSlots = settings.totalShapes - i;
+                const neededTargets = state.correctAnswer - targetCount;
+
+                if (neededTargets >= remainingSlots) {
+                    shapeType = state.targetShape;
+                } else if (targetCount >= state.correctAnswer) {
+                    // Pick any OTHER shape
+                    const others = availableShapes.filter(s => s.name !== state.targetShape.name);
+                    shapeType = others[Math.floor(Math.random() * others.length)];
+                } else {
+                    // Random choice
+                    if (Math.random() < 0.3 && targetCount < state.correctAnswer) {
+                        shapeType = state.targetShape;
+                    } else {
+                        const others = availableShapes.filter(s => s.name !== state.targetShape.name);
+                        shapeType = others.length > 0 ? others[Math.floor(Math.random() * others.length)] : state.targetShape;
+                    }
+                }
+
+                if (shapeType.name === state.targetShape.name) {
+                    targetCount++;
+                }
+
+                // Find non-overlapping position
+                let x, y, attempts = 0;
+                do {
+                    x = 10 + Math.random() * fieldWidth;
+                    y = 10 + Math.random() * fieldHeight;
+                    attempts++;
+                } while (attempts < 50 && positions.some(p =>
+                    Math.abs(p.x - x) < settings.shapeSize &&
+                    Math.abs(p.y - y) < settings.shapeSize
+                ));
+
+                positions.push({ x, y });
+                state.shapes.push(createShape(shapeType, x, y, settings.shapeSize));
+            }
+
+            // Update question
+            questionEl.textContent = `Count the ${state.targetShape.displayName}!`;
+            shapePreviewEl.textContent = state.targetShape.emoji;
+
+            // Generate answer options (always include correct answer)
+            const options = new Set([state.correctAnswer]);
+            while (options.size < 4) {
+                let opt = Math.floor(Math.random() * 6);
+                // Make wrong answers close to correct for challenge
+                if (Math.random() > 0.5) {
+                    opt = Math.max(0, state.correctAnswer + (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 2) + 1));
+                }
+                options.add(Math.min(Math.max(opt, 0), 5));
+            }
+
+            state.answerOptions = Array.from(options).sort((a, b) => a - b);
+
+            // Update answer buttons
+            const buttons = answersContainer.querySelectorAll('.answer-btn');
+            buttons.forEach((btn, i) => {
+                btn.textContent = state.answerOptions[i];
+                btn.dataset.value = state.answerOptions[i];
+                btn.className = 'answer-btn';
+                btn.disabled = false;
+            });
+
+            // Reset timer
+            state.timer = state.timerMax;
+            timerBar.style.width = '100%';
+            timerBar.classList.remove('warning');
+
+            state.roundActive = true;
+            roundEl.textContent = state.round;
+        }
+
+        // Show feedback
+        function showFeedback(message, type) {
+            feedbackEl.textContent = message;
+            feedbackEl.className = type;
+        }
+
+        // Show points popup
+        function showPoints(points) {
+            const popup = document.createElement('div');
+            popup.className = 'points-popup';
+            popup.textContent = '+' + points;
+            popup.style.left = '50%';
+            popup.style.top = '50%';
+            popup.style.transform = 'translateX(-50%)';
+            container.appendChild(popup);
+            setTimeout(() => popup.remove(), 1000);
+        }
+
+        // Update combo display
+        function updateCombo() {
+            if (state.combo >= 2) {
+                comboCountEl.textContent = state.combo;
+                comboEl.classList.add('show');
+            } else {
+                comboEl.classList.remove('show');
+            }
+        }
+
+        // Highlight target shapes
+        function highlightTargets() {
+            state.shapes.forEach(s => {
+                if (s.type === state.targetShape.name) {
+                    s.element.classList.add('counted');
+                }
+            });
+        }
+
+        // Handle answer
+        function handleAnswer(value) {
+            if (!state.roundActive) return;
+
+            state.roundActive = false;
+            const buttons = answersContainer.querySelectorAll('.answer-btn');
+            buttons.forEach(btn => btn.disabled = true);
+
+            const isCorrect = parseInt(value) === state.correctAnswer;
+
+            // Find clicked button
+            const clickedBtn = Array.from(buttons).find(btn => btn.dataset.value === value.toString());
+
+            if (isCorrect) {
+                clickedBtn.classList.add('correct');
+                state.combo++;
+                if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+                state.correctCount++;
+
+                // Scan effect
+                scanLine.classList.add('active');
+                setTimeout(() => scanLine.classList.remove('active'), 500);
+
+                // Highlight shapes
+                highlightTargets();
+
+                // Calculate points
+                const settings = getRoundSettings(state.round);
+                const timeBonus = Math.floor(state.timer / 2);
+                const comboBonus = (state.combo - 1) * 30;
+                const points = settings.basePoints + timeBonus + comboBonus;
+
+                state.score += points;
+                scoreEl.textContent = state.score;
+
+                showFeedback('✓ Correct!', 'correct');
+                showPoints(points);
+                updateCombo();
+
+                setTimeout(nextRound, 1000);
+            } else {
+                clickedBtn.classList.add('wrong');
+                state.combo = 0;
+                updateCombo();
+
+                // Show correct answer
+                const correctBtn = Array.from(buttons).find(btn => btn.dataset.value === state.correctAnswer.toString());
+                setTimeout(() => correctBtn.classList.add('correct'), 300);
+
+                highlightTargets();
+
+                showFeedback(`✗ It was ${state.correctAnswer}!`, 'wrong');
+
+                setTimeout(nextRound, 1500);
+            }
+        }
+
+        // Handle timeout
+        function handleTimeout() {
+            state.roundActive = false;
+            state.combo = 0;
+            updateCombo();
+
+            const buttons = answersContainer.querySelectorAll('.answer-btn');
+            buttons.forEach(btn => btn.disabled = true);
+
+            const correctBtn = Array.from(buttons).find(btn => btn.dataset.value === state.correctAnswer.toString());
+            correctBtn.classList.add('correct');
+
+            highlightTargets();
+
+            showFeedback(`⏱️ Time! It was ${state.correctAnswer}!`, 'wrong');
+
+            setTimeout(nextRound, 1500);
+        }
+
+        // Next round
+        function nextRound() {
+            state.round++;
+
+            if (state.round > state.maxRounds) {
+                endGame();
+            } else {
+                setupRound();
+            }
+        }
+
+        // Update game loop
+        function update() {
+            if (!state.gameRunning) return;
+
+            const settings = getRoundSettings(state.round);
+            const fieldRect = gameField.getBoundingClientRect();
+
+            // Update shapes (floating animation)
+            state.shapes.forEach(shape => {
+                shape.x += shape.vx;
+                shape.y += shape.vy;
+
+                // Bounce off edges
+                if (shape.x < 0 || shape.x > fieldRect.width - shape.size - 20) {
+                    shape.vx *= -1;
+                    shape.x = Math.max(0, Math.min(fieldRect.width - shape.size - 20, shape.x));
+                }
+                if (shape.y < 0 || shape.y > fieldRect.height - shape.size - 20) {
+                    shape.vy *= -1;
+                    shape.y = Math.max(0, Math.min(fieldRect.height - shape.size - 20, shape.y));
+                }
+
+                shape.element.style.left = shape.x + 'px';
+                shape.element.style.top = shape.y + 'px';
+            });
+
+            // Update timer
+            if (state.roundActive) {
+                state.timer -= settings.timerSpeed;
+                timerBar.style.width = Math.max(0, state.timer) + '%';
+
+                if (state.timer < 30) {
+                    timerBar.classList.add('warning');
+                }
+
+                if (state.timer <= 0) {
+                    handleTimeout();
+                }
+            }
+
+            // Shooting stars
+            createShootingStar();
+
+            requestAnimationFrame(update);
+        }
+
+        // Start game
+        function startGame() {
+            startScreen.style.display = 'none';
+            endScreen.style.display = 'none';
+
+            // Reset state
+            state.score = 0;
+            state.round = 1;
+            state.combo = 0;
+            state.maxCombo = 0;
+            state.correctCount = 0;
+
+            scoreEl.textContent = '0';
+            roundEl.textContent = '1';
+
+            state.gameRunning = true;
+            setupRound();
+            update();
+        }
+
+        // End game
+        function endGame() {
+            state.gameRunning = false;
+            state.roundActive = false;
+
+            // Clear shapes
+            state.shapes.forEach(s => s.element.remove());
+
+            // Calculate stars
+            const accuracy = state.correctCount / state.maxRounds;
+            let stars = '';
+            let performance = '';
+
+            if (accuracy >= 0.9) {
+                stars = '⭐⭐⭐';
+                performance = 'Perfect';
+            } else if (accuracy >= 0.7) {
+                stars = '⭐⭐';
+                performance = 'Great';
+            } else if (accuracy >= 0.5) {
+                stars = '⭐';
+                performance = 'Good';
+            } else {
+                stars = '☆';
+                performance = 'Keep practicing';
+            }
+
+            document.getElementById('stars-display').textContent = stars;
+            document.getElementById('performance').textContent = performance;
+            document.getElementById('final-score').textContent = state.score;
+            document.getElementById('final-correct').textContent = state.correctCount + '/' + state.maxRounds;
+            document.getElementById('final-accuracy').textContent = Math.round(accuracy * 100) + '%';
+            document.getElementById('best-combo').textContent = state.maxCombo;
+
+            endScreen.style.display = 'flex';
+        }
+
+        // Event listeners
+        answersContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('answer-btn')) {
+                handleAnswer(e.target.dataset.value);
+            }
+        });
+
+        // Keyboard shortcuts (1-4)
+        document.addEventListener('keydown', (e) => {
+            if (!state.roundActive) return;
+            const key = parseInt(e.key);
+            if (key >= 1 && key <= 4) {
+                const btn = answersContainer.querySelectorAll('.answer-btn')[key - 1];
+                if (btn) handleAnswer(btn.dataset.value);
+            }
+        });
+
+        document.getElementById('start-button').addEventListener('click', startGame);
+        document.getElementById('play-again').addEventListener('click', startGame);
+
+        // Initialize
+        createStars();
+    </script>
+</body>
+</html>

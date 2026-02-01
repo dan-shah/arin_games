@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letter Landing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard', cursive;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
+        }
+
+        /* Stars background */
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* Ground/runway */
+        #ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(to bottom, #2d5a27 0%, #1e3d1a 100%);
+        }
+
+        #runway {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 80px;
+            background: #333;
+        }
+
+        .runway-line {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 30px;
+            background: white;
+        }
+
+        /* HUD */
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%);
+            z-index: 100;
+        }
+
+        .hud-box {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 20px;
+            border-radius: 15px;
+            color: white;
+            font-size: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        #level-display {
+            color: #ffd700;
+        }
+
+        #timer-bar-container {
+            width: 150px;
+            height: 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        #timer-bar {
+            height: 100%;
+            background: linear-gradient(to right, #ff6b6b, #ffd93d);
+            transition: width 0.1s linear;
+            width: 100%;
+        }
+
+        #timer-bar.warning {
+            background: linear-gradient(to right, #ff0000, #ff6b6b);
+            animation: pulse 0.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Prompt box */
+        #prompt-box {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        #prompt-box .instruction {
+            font-size: 18px;
+            color: #666;
+        }
+
+        #prompt-box .picture-word {
+            font-size: 50px;
+            line-height: 1.2;
+        }
+
+
+        /* Combo display */
+        #combo {
+            position: absolute;
+            top: 150px;
+            right: 30px;
+            font-size: 24px;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 100;
+        }
+
+        #combo.show {
+            opacity: 1;
+            animation: comboPopup 0.3s ease-out;
+        }
+
+        @keyframes comboPopup {
+            0% { transform: scale(0.5); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Airplane */
+        #airplane {
+            position: absolute;
+            font-size: 50px;
+            z-index: 50;
+            transition: transform 0.1s;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+        }
+
+        #airplane.banking-left {
+            transform: rotate(-15deg);
+        }
+
+        #airplane.banking-right {
+            transform: rotate(15deg);
+        }
+
+        /* Engine trail */
+        .trail {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 200, 100, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 40;
+        }
+
+        /* Letter clouds */
+        .letter-cloud {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100px;
+            height: 70px;
+            z-index: 30;
+            transition: transform 0.2s;
+        }
+
+        .letter-cloud:hover {
+            transform: scale(1.1);
+        }
+
+        .cloud-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 50px;
+            box-shadow:
+                inset -10px -10px 20px rgba(200, 200, 200, 0.5),
+                0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .letter-cloud .letter {
+            position: relative;
+            font-size: 42px;
+            font-weight: bold;
+            color: #5D5FEF;
+            z-index: 10;
+            text-shadow: 2px 2px 0 white;
+        }
+
+        .letter-cloud.correct {
+            animation: correctPop 0.5s ease-out forwards;
+        }
+
+        @keyframes correctPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .letter-cloud.wrong {
+            animation: wrongShake 0.5s ease-out;
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-10px); }
+            80% { transform: translateX(10px); }
+        }
+
+        /* Birds (obstacles) */
+        .bird {
+            position: absolute;
+            font-size: 35px;
+            z-index: 35;
+            animation: flapWings 0.3s ease-in-out infinite;
+        }
+
+        @keyframes flapWings {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.8); }
+        }
+
+        /* Feedback */
+        #feedback {
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 60px;
+            font-weight: bold;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+        }
+
+        #feedback.correct {
+            color: #4CAF50;
+            animation: feedbackCorrect 0.8s ease-out forwards;
+        }
+
+        #feedback.wrong {
+            color: #ff6b6b;
+            animation: feedbackWrong 0.8s ease-out forwards;
+        }
+
+        #feedback.timeout {
+            color: #ffa500;
+            animation: feedbackWrong 0.8s ease-out forwards;
+        }
+
+        @keyframes feedbackCorrect {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -70%) scale(1); }
+        }
+
+        @keyframes feedbackWrong {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        /* Points popup */
+        .points-popup {
+            position: absolute;
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+            z-index: 150;
+            animation: floatUp 1s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-60px); }
+        }
+
+        /* Screens */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            background: linear-gradient(to bottom, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+
+        .screen h1 {
+            font-size: 56px;
+            color: #ffd700;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+        }
+
+        .screen .subtitle {
+            font-size: 24px;
+            color: #aaa;
+            margin-bottom: 30px;
+        }
+
+
+        .screen .instructions {
+            font-size: 22px;
+            color: #ccc;
+            text-align: center;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+
+        .screen .instructions span {
+            background: rgba(255,255,255,0.1);
+            padding: 5px 15px;
+            border-radius: 8px;
+            margin: 0 5px;
+        }
+
+        .game-btn {
+            font-family: inherit;
+            font-size: 28px;
+            padding: 18px 50px;
+            background: linear-gradient(to bottom, #5D5FEF, #4345c0);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(93, 95, 239, 0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 10px;
+        }
+
+        .game-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(93, 95, 239, 0.6);
+        }
+
+        .game-btn.secondary {
+            background: linear-gradient(to bottom, #666, #444);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* End screen specifics */
+        #end-screen .stats {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        #end-screen .stat {
+            text-align: center;
+        }
+
+        #end-screen .stat-value {
+            font-size: 48px;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #end-screen .stat-label {
+            font-size: 18px;
+            color: #aaa;
+        }
+
+        #end-screen .stars-display {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        #end-screen .performance {
+            font-size: 32px;
+            color: #4CAF50;
+            margin-bottom: 30px;
+        }
+
+        /* Level up animation */
+        #level-up {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            color: #ffd700;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            z-index: 250;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #level-up.show {
+            animation: levelUp 1.5s ease-out forwards;
+        }
+
+        @keyframes levelUp {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        /* Mobile touch controls */
+        #touch-controls {
+            display: none;
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            z-index: 100;
+        }
+
+        .touch-btn {
+            width: 65px;
+            height: 65px;
+            font-size: 28px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 50%;
+            margin: 3px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .touch-btn:active {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .touch-row {
+            display: flex;
+            justify-content: center;
+        }
+
+        @media (pointer: coarse) {
+            #touch-controls {
+                display: block;
+            }
+        }
+
+        /* Hide on start/end screens */
+        .screen ~ #touch-controls {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Ground -->
+        <div id="ground">
+            <div id="runway">
+                <div class="runway-line" style="top: 10px;"></div>
+                <div class="runway-line" style="top: 45px;"></div>
+            </div>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud">
+            <div class="hud-box">Score: <span id="score">0</span></div>
+            <div class="hud-box" id="level-display">Level <span id="level">1</span></div>
+            <div class="hud-box">
+                <div id="timer-bar-container">
+                    <div id="timer-bar"></div>
+                </div>
+            </div>
+            <div class="hud-box">Round: <span id="round">1</span>/10</div>
+        </div>
+
+        <!-- Prompt -->
+        <div id="prompt-box">
+            <div class="instruction">Find the letter for:</div>
+            <div class="picture-word" id="picture">🍎</div>
+        </div>
+
+        <!-- Combo -->
+        <div id="combo">🔥 x<span id="combo-count">2</span></div>
+
+        <!-- Airplane -->
+        <div id="airplane">✈️</div>
+
+        <!-- Feedback -->
+        <div id="feedback"></div>
+
+        <!-- Level up -->
+        <div id="level-up">Level Up!</div>
+
+        <!-- Touch controls -->
+        <div id="touch-controls">
+            <div class="touch-row">
+                <button class="touch-btn" id="btn-up">⬆️</button>
+            </div>
+            <div class="touch-row">
+                <button class="touch-btn" id="btn-left">⬅️</button>
+                <button class="touch-btn" id="btn-down">⬇️</button>
+                <button class="touch-btn" id="btn-right">➡️</button>
+            </div>
+        </div>
+
+        <!-- Start screen -->
+        <div class="screen" id="start-screen">
+            <h1>Letter Landing</h1>
+            <div class="subtitle">Fly to the matching letter</div>
+            <div class="instructions">
+                Use <span>Arrow Keys</span> or <span>WASD</span> to fly<br>
+                Find the cloud with the correct starting letter<br>
+                Watch the timer and avoid the birds
+            </div>
+            <button class="game-btn" id="start-button">Start</button>
+        </div>
+
+        <!-- End screen -->
+        <div class="screen" id="end-screen" style="display: none;">
+            <h1 id="end-title">Game Over</h1>
+            <div class="stars-display" id="stars-display">⭐⭐⭐</div>
+            <div class="performance" id="performance">Perfect</div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="final-score">0</div>
+                    <div class="stat-label">Points</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="final-correct">0</div>
+                    <div class="stat-label">Correct</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="final-level">1</div>
+                    <div class="stat-label">Level</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="best-combo">0</div>
+                    <div class="stat-label">Best Combo</div>
+                </div>
+            </div>
+            <div>
+                <button class="game-btn" id="play-again">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Word pairs
+        const wordPairs = [
+            { emoji: '🍎', word: 'Apple', letter: 'A' },
+            { emoji: '🐜', word: 'Ant', letter: 'A' },
+            { emoji: '🛩️', word: 'Airplane', letter: 'A' },
+            { emoji: '🏀', word: 'Ball', letter: 'B' },
+            { emoji: '🍌', word: 'Banana', letter: 'B' },
+            { emoji: '🐻', word: 'Bear', letter: 'B' },
+            { emoji: '🦋', word: 'Butterfly', letter: 'B' },
+            { emoji: '🐱', word: 'Cat', letter: 'C' },
+            { emoji: '🥕', word: 'Carrot', letter: 'C' },
+            { emoji: '🚗', word: 'Car', letter: 'C' },
+            { emoji: '🍪', word: 'Cookie', letter: 'C' },
+            { emoji: '🐕', word: 'Dog', letter: 'D' },
+            { emoji: '🦆', word: 'Duck', letter: 'D' },
+            { emoji: '🐬', word: 'Dolphin', letter: 'D' },
+            { emoji: '🥚', word: 'Egg', letter: 'E' },
+            { emoji: '🐘', word: 'Elephant', letter: 'E' },
+            { emoji: '👁️', word: 'Eye', letter: 'E' },
+            { emoji: '🐸', word: 'Frog', letter: 'F' },
+            { emoji: '🐟', word: 'Fish', letter: 'F' },
+            { emoji: '🦊', word: 'Fox', letter: 'F' },
+            { emoji: '🔥', word: 'Fire', letter: 'F' },
+            { emoji: '🍇', word: 'Grapes', letter: 'G' },
+            { emoji: '🎸', word: 'Guitar', letter: 'G' },
+            { emoji: '🦒', word: 'Giraffe', letter: 'G' },
+            { emoji: '🏠', word: 'House', letter: 'H' },
+            { emoji: '🎩', word: 'Hat', letter: 'H' },
+            { emoji: '🐴', word: 'Horse', letter: 'H' },
+            { emoji: '❤️', word: 'Heart', letter: 'H' },
+            { emoji: '🍦', word: 'Ice Cream', letter: 'I' },
+            { emoji: '🦎', word: 'Iguana', letter: 'I' },
+            { emoji: '🃏', word: 'Joker', letter: 'J' },
+            { emoji: '🛫', word: 'Jet', letter: 'J' },
+            { emoji: '🪁', word: 'Kite', letter: 'K' },
+            { emoji: '🔑', word: 'Key', letter: 'K' },
+            { emoji: '🦘', word: 'Kangaroo', letter: 'K' },
+            { emoji: '🦁', word: 'Lion', letter: 'L' },
+            { emoji: '🍋', word: 'Lemon', letter: 'L' },
+            { emoji: '🍃', word: 'Leaf', letter: 'L' },
+            { emoji: '🌙', word: 'Moon', letter: 'M' },
+            { emoji: '🐵', word: 'Monkey', letter: 'M' },
+            { emoji: '🍄', word: 'Mushroom', letter: 'M' },
+            { emoji: '👃', word: 'Nose', letter: 'N' },
+            { emoji: '📰', word: 'Newspaper', letter: 'N' },
+            { emoji: '🐙', word: 'Octopus', letter: 'O' },
+            { emoji: '🍊', word: 'Orange', letter: 'O' },
+            { emoji: '🦉', word: 'Owl', letter: 'O' },
+            { emoji: '🐷', word: 'Pig', letter: 'P' },
+            { emoji: '🍕', word: 'Pizza', letter: 'P' },
+            { emoji: '🐧', word: 'Penguin', letter: 'P' },
+            { emoji: '🎃', word: 'Pumpkin', letter: 'P' },
+            { emoji: '👸', word: 'Queen', letter: 'Q' },
+            { emoji: '🌈', word: 'Rainbow', letter: 'R' },
+            { emoji: '🐰', word: 'Rabbit', letter: 'R' },
+            { emoji: '🚀', word: 'Rocket', letter: 'R' },
+            { emoji: '☀️', word: 'Sun', letter: 'S' },
+            { emoji: '⭐', word: 'Star', letter: 'S' },
+            { emoji: '🐍', word: 'Snake', letter: 'S' },
+            { emoji: '🍓', word: 'Strawberry', letter: 'S' },
+            { emoji: '🐢', word: 'Turtle', letter: 'T' },
+            { emoji: '🌳', word: 'Tree', letter: 'T' },
+            { emoji: '🚂', word: 'Train', letter: 'T' },
+            { emoji: '🐯', word: 'Tiger', letter: 'T' },
+            { emoji: '☂️', word: 'Umbrella', letter: 'U' },
+            { emoji: '🦄', word: 'Unicorn', letter: 'U' },
+            { emoji: '🎻', word: 'Violin', letter: 'V' },
+            { emoji: '🌋', word: 'Volcano', letter: 'V' },
+            { emoji: '🍉', word: 'Watermelon', letter: 'W' },
+            { emoji: '🐋', word: 'Whale', letter: 'W' },
+            { emoji: '🐺', word: 'Wolf', letter: 'W' },
+            { emoji: '🎄', word: 'Christmas Tree', letter: 'X' },
+            { emoji: '💛', word: 'Yellow', letter: 'Y' },
+            { emoji: '🦓', word: 'Zebra', letter: 'Z' },
+            { emoji: '⚡', word: 'Zap', letter: 'Z' }
+        ];
+
+        // Game state
+        let state = {
+            score: 0,
+            level: 1,
+            round: 1,
+            maxRounds: 10,
+            combo: 0,
+            maxCombo: 0,
+            correctCount: 0,
+            currentWord: null,
+            airplane: { x: 0, y: 0, vx: 0, vy: 0 },
+            clouds: [],
+            birds: [],
+            trails: [],
+            timer: 100,
+            timerMax: 100,
+            gameRunning: false,
+            roundActive: false,
+            usedWords: []
+        };
+
+        // Level settings
+        function getLevelSettings(level) {
+            return {
+                cloudSpeed: 0.3 + (level * 0.15),
+                birdSpeed: 1 + (level * 0.3),
+                birdCount: Math.min(level, 4),
+                timerSpeed: 0.08 + (level * 0.015),
+                cloudCount: Math.min(3 + level, 6),
+                basePoints: 100 + (level * 20)
+            };
+        }
+
+        // DOM elements
+        const container = document.getElementById('game-container');
+        const airplaneEl = document.getElementById('airplane');
+        const scoreEl = document.getElementById('score');
+        const levelEl = document.getElementById('level');
+        const roundEl = document.getElementById('round');
+        const pictureEl = document.getElementById('picture');
+        const feedbackEl = document.getElementById('feedback');
+        const timerBar = document.getElementById('timer-bar');
+        const comboEl = document.getElementById('combo');
+        const comboCountEl = document.getElementById('combo-count');
+        const levelUpEl = document.getElementById('level-up');
+        const startScreen = document.getElementById('start-screen');
+        const endScreen = document.getElementById('end-screen');
+
+        // Keys
+        const keys = { up: false, down: false, left: false, right: false };
+
+        // Create starry background
+        function createStars() {
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.width = (1 + Math.random() * 2) + 'px';
+                star.style.height = star.style.width;
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 70 + '%';
+                star.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(star);
+            }
+        }
+
+        // Create letter cloud
+        function createCloud(letter, x, y) {
+            const cloud = document.createElement('div');
+            cloud.className = 'letter-cloud';
+            cloud.style.left = x + 'px';
+            cloud.style.top = y + 'px';
+            cloud.dataset.letter = letter;
+
+            const bg = document.createElement('div');
+            bg.className = 'cloud-bg';
+            cloud.appendChild(bg);
+
+            const letterEl = document.createElement('div');
+            letterEl.className = 'letter';
+            letterEl.textContent = letter;
+            cloud.appendChild(letterEl);
+
+            container.appendChild(cloud);
+
+            const settings = getLevelSettings(state.level);
+            return {
+                element: cloud,
+                x,
+                y,
+                letter,
+                vx: (Math.random() - 0.5) * settings.cloudSpeed,
+                vy: (Math.random() - 0.5) * settings.cloudSpeed * 0.5,
+                hit: false
+            };
+        }
+
+        // Create bird
+        function createBird() {
+            const bird = document.createElement('div');
+            bird.className = 'bird';
+            bird.textContent = '🐦';
+
+            const fromLeft = Math.random() > 0.5;
+            const x = fromLeft ? -50 : window.innerWidth + 50;
+            const y = 150 + Math.random() * (window.innerHeight - 350);
+
+            bird.style.left = x + 'px';
+            bird.style.top = y + 'px';
+            bird.style.transform = fromLeft ? 'scaleX(1)' : 'scaleX(-1)';
+
+            container.appendChild(bird);
+
+            const settings = getLevelSettings(state.level);
+            return {
+                element: bird,
+                x,
+                y,
+                vx: fromLeft ? settings.birdSpeed : -settings.birdSpeed
+            };
+        }
+
+        // Get random distractor letters
+        function getRandomLetters(correct, count) {
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const letters = [correct];
+            while (letters.length < count) {
+                const letter = alphabet[Math.floor(Math.random() * alphabet.length)];
+                if (!letters.includes(letter)) {
+                    letters.push(letter);
+                }
+            }
+            return letters.sort(() => Math.random() - 0.5);
+        }
+
+        // Get unused word
+        function getNewWord() {
+            const available = wordPairs.filter(w => !state.usedWords.includes(w.word));
+            if (available.length === 0) {
+                state.usedWords = [];
+                return wordPairs[Math.floor(Math.random() * wordPairs.length)];
+            }
+            const word = available[Math.floor(Math.random() * available.length)];
+            state.usedWords.push(word.word);
+            return word;
+        }
+
+        // Setup new round
+        function setupRound() {
+            // Clear old clouds
+            state.clouds.forEach(c => c.element.remove());
+            state.clouds = [];
+
+            // Get new word
+            state.currentWord = getNewWord();
+            pictureEl.textContent = state.currentWord.emoji;
+
+            // Create clouds
+            const settings = getLevelSettings(state.level);
+            const letters = getRandomLetters(state.currentWord.letter, settings.cloudCount);
+
+            const margin = 120;
+            const playWidth = window.innerWidth - margin * 2;
+            const playHeight = window.innerHeight - 300;
+
+            letters.forEach((letter, i) => {
+                const cols = Math.ceil(Math.sqrt(settings.cloudCount));
+                const row = Math.floor(i / cols);
+                const col = i % cols;
+
+                const cellWidth = playWidth / cols;
+                const cellHeight = playHeight / Math.ceil(settings.cloudCount / cols);
+
+                const x = margin + col * cellWidth + Math.random() * (cellWidth - 100);
+                const y = 180 + row * cellHeight + Math.random() * (cellHeight - 70);
+
+                state.clouds.push(createCloud(letter, x, y));
+            });
+
+            // Reset timer
+            state.timer = state.timerMax;
+            timerBar.style.width = '100%';
+            timerBar.classList.remove('warning');
+
+            state.roundActive = true;
+            roundEl.textContent = state.round;
+        }
+
+        // Show feedback
+        function showFeedback(message, type) {
+            feedbackEl.textContent = message;
+            feedbackEl.className = type;
+        }
+
+        // Show points popup
+        function showPoints(x, y, points) {
+            const popup = document.createElement('div');
+            popup.className = 'points-popup';
+            popup.textContent = '+' + points;
+            popup.style.left = x + 'px';
+            popup.style.top = y + 'px';
+            container.appendChild(popup);
+            setTimeout(() => popup.remove(), 1000);
+        }
+
+        // Update combo display
+        function updateCombo() {
+            if (state.combo >= 2) {
+                comboCountEl.textContent = state.combo;
+                comboEl.classList.add('show');
+            } else {
+                comboEl.classList.remove('show');
+            }
+        }
+
+        // Handle correct answer
+        function handleCorrect(cloud) {
+            state.roundActive = false;
+            cloud.hit = true;
+            cloud.element.classList.add('correct');
+
+            state.combo++;
+            if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+            state.correctCount++;
+
+            // Calculate points
+            const settings = getLevelSettings(state.level);
+            const timeBonus = Math.floor(state.timer / 2);
+            const comboBonus = (state.combo - 1) * 25;
+            const points = settings.basePoints + timeBonus + comboBonus;
+
+            state.score += points;
+            scoreEl.textContent = state.score;
+
+            showFeedback('✓ Correct!', 'correct');
+            showPoints(cloud.x + 50, cloud.y, points);
+            updateCombo();
+
+            setTimeout(nextRound, 800);
+        }
+
+        // Handle wrong answer
+        function handleWrong(cloud) {
+            cloud.element.classList.add('wrong');
+            setTimeout(() => cloud.element.classList.remove('wrong'), 500);
+
+            state.combo = 0;
+            updateCombo();
+
+            showFeedback('✗ Try Again!', 'wrong');
+        }
+
+        // Handle timeout
+        function handleTimeout() {
+            state.roundActive = false;
+            state.combo = 0;
+            updateCombo();
+
+            showFeedback('⏱️ Time\'s Up!', 'timeout');
+
+            // Highlight correct answer
+            state.clouds.forEach(c => {
+                if (c.letter === state.currentWord.letter) {
+                    c.element.style.border = '4px solid #4CAF50';
+                    c.element.style.transform = 'scale(1.2)';
+                }
+            });
+
+            setTimeout(nextRound, 1500);
+        }
+
+        // Handle bird collision
+        function handleBirdHit() {
+            state.roundActive = false;
+            state.combo = 0;
+            updateCombo();
+
+            showFeedback('🐦 Bird Strike!', 'wrong');
+
+            // Shake airplane
+            airplaneEl.style.animation = 'wrongShake 0.5s';
+            setTimeout(() => airplaneEl.style.animation = '', 500);
+
+            setTimeout(nextRound, 1000);
+        }
+
+        // Next round
+        function nextRound() {
+            state.round++;
+
+            // Level up every 5 correct answers
+            if (state.correctCount > 0 && state.correctCount % 5 === 0 && state.level < 5) {
+                state.level++;
+                levelEl.textContent = state.level;
+                levelUpEl.classList.add('show');
+                setTimeout(() => levelUpEl.classList.remove('show'), 1500);
+            }
+
+            if (state.round > state.maxRounds) {
+                endGame();
+            } else {
+                setupRound();
+            }
+        }
+
+        // Check collisions
+        function checkCollisions() {
+            if (!state.roundActive) return;
+
+            const planeRect = {
+                x: state.airplane.x + 10,
+                y: state.airplane.y + 10,
+                w: 30,
+                h: 30
+            };
+
+            // Check cloud collisions
+            for (const cloud of state.clouds) {
+                if (cloud.hit) continue;
+
+                const cloudRect = {
+                    x: cloud.x + 10,
+                    y: cloud.y + 10,
+                    w: 80,
+                    h: 50
+                };
+
+                if (planeRect.x < cloudRect.x + cloudRect.w &&
+                    planeRect.x + planeRect.w > cloudRect.x &&
+                    planeRect.y < cloudRect.y + cloudRect.h &&
+                    planeRect.y + planeRect.h > cloudRect.y) {
+
+                    if (cloud.letter === state.currentWord.letter) {
+                        handleCorrect(cloud);
+                    } else {
+                        handleWrong(cloud);
+                    }
+                    return;
+                }
+            }
+
+            // Check bird collisions
+            for (const bird of state.birds) {
+                const birdRect = {
+                    x: bird.x + 5,
+                    y: bird.y + 5,
+                    w: 25,
+                    h: 25
+                };
+
+                if (planeRect.x < birdRect.x + birdRect.w &&
+                    planeRect.x + planeRect.w > birdRect.x &&
+                    planeRect.y < birdRect.y + birdRect.h &&
+                    planeRect.y + planeRect.h > birdRect.y) {
+                    handleBirdHit();
+                    return;
+                }
+            }
+        }
+
+        // Update game
+        function update() {
+            if (!state.gameRunning) return;
+
+            const settings = getLevelSettings(state.level);
+
+            // Update airplane
+            const accel = 0.8;
+            const friction = 0.92;
+            const maxSpeed = 12;
+
+            if (keys.up) state.airplane.vy -= accel;
+            if (keys.down) state.airplane.vy += accel;
+            if (keys.left) state.airplane.vx -= accel;
+            if (keys.right) state.airplane.vx += accel;
+
+            state.airplane.vx *= friction;
+            state.airplane.vy *= friction;
+
+            state.airplane.vx = Math.max(-maxSpeed, Math.min(maxSpeed, state.airplane.vx));
+            state.airplane.vy = Math.max(-maxSpeed, Math.min(maxSpeed, state.airplane.vy));
+
+            state.airplane.x += state.airplane.vx;
+            state.airplane.y += state.airplane.vy;
+
+            // Boundaries
+            state.airplane.x = Math.max(0, Math.min(window.innerWidth - 50, state.airplane.x));
+            state.airplane.y = Math.max(60, Math.min(window.innerHeight - 130, state.airplane.y));
+
+            // Update airplane element
+            airplaneEl.style.left = state.airplane.x + 'px';
+            airplaneEl.style.top = state.airplane.y + 'px';
+
+            // Banking animation
+            if (state.airplane.vx < -2) {
+                airplaneEl.classList.add('banking-left');
+                airplaneEl.classList.remove('banking-right');
+            } else if (state.airplane.vx > 2) {
+                airplaneEl.classList.add('banking-right');
+                airplaneEl.classList.remove('banking-left');
+            } else {
+                airplaneEl.classList.remove('banking-left', 'banking-right');
+            }
+
+            // Engine trail
+            if (Math.random() > 0.7) {
+                const trail = document.createElement('div');
+                trail.className = 'trail';
+                trail.style.left = (state.airplane.x - 5) + 'px';
+                trail.style.top = (state.airplane.y + 20) + 'px';
+                container.appendChild(trail);
+                state.trails.push({ element: trail, life: 20 });
+            }
+
+            // Update trails
+            state.trails = state.trails.filter(t => {
+                t.life--;
+                t.element.style.opacity = t.life / 20;
+                if (t.life <= 0) {
+                    t.element.remove();
+                    return false;
+                }
+                return true;
+            });
+
+            // Update clouds (gentle floating)
+            state.clouds.forEach(cloud => {
+                if (cloud.hit) return;
+                cloud.x += cloud.vx;
+                cloud.y += cloud.vy;
+
+                // Bounce off edges
+                if (cloud.x < 50 || cloud.x > window.innerWidth - 150) cloud.vx *= -1;
+                if (cloud.y < 150 || cloud.y > window.innerHeight - 200) cloud.vy *= -1;
+
+                cloud.element.style.left = cloud.x + 'px';
+                cloud.element.style.top = cloud.y + 'px';
+            });
+
+            // Update birds
+            state.birds = state.birds.filter(bird => {
+                bird.x += bird.vx;
+                bird.element.style.left = bird.x + 'px';
+
+                if (bird.x < -100 || bird.x > window.innerWidth + 100) {
+                    bird.element.remove();
+                    return false;
+                }
+                return true;
+            });
+
+            // Spawn birds
+            if (state.roundActive && state.birds.length < settings.birdCount && Math.random() < 0.01) {
+                state.birds.push(createBird());
+            }
+
+            // Update timer
+            if (state.roundActive) {
+                state.timer -= settings.timerSpeed;
+                timerBar.style.width = Math.max(0, state.timer) + '%';
+
+                if (state.timer < 30) {
+                    timerBar.classList.add('warning');
+                }
+
+                if (state.timer <= 0) {
+                    handleTimeout();
+                }
+            }
+
+            // Check collisions
+            checkCollisions();
+
+            requestAnimationFrame(update);
+        }
+
+        // Start game
+        function startGame() {
+            startScreen.style.display = 'none';
+            endScreen.style.display = 'none';
+
+            // Reset state
+            state.score = 0;
+            state.level = 1;
+            state.round = 1;
+            state.combo = 0;
+            state.maxCombo = 0;
+            state.correctCount = 0;
+            state.usedWords = [];
+            state.birds.forEach(b => b.element.remove());
+            state.birds = [];
+            state.trails.forEach(t => t.element.remove());
+            state.trails = [];
+
+            scoreEl.textContent = '0';
+            levelEl.textContent = '1';
+
+            // Position airplane
+            state.airplane.x = 100;
+            state.airplane.y = window.innerHeight / 2;
+            state.airplane.vx = 0;
+            state.airplane.vy = 0;
+
+            state.gameRunning = true;
+            setupRound();
+            update();
+        }
+
+        // End game
+        function endGame() {
+            state.gameRunning = false;
+            state.roundActive = false;
+
+            // Clear game elements
+            state.clouds.forEach(c => c.element.remove());
+            state.birds.forEach(b => b.element.remove());
+            state.trails.forEach(t => t.element.remove());
+
+            // Calculate stars (based on accuracy)
+            const accuracy = state.correctCount / state.maxRounds;
+            let stars = '';
+            let performance = '';
+
+            if (accuracy >= 0.9) {
+                stars = '⭐⭐⭐';
+                performance = 'Perfect';
+            } else if (accuracy >= 0.7) {
+                stars = '⭐⭐';
+                performance = 'Great';
+            } else if (accuracy >= 0.5) {
+                stars = '⭐';
+                performance = 'Good';
+            } else {
+                stars = '☆';
+                performance = 'Keep practicing';
+            }
+
+            document.getElementById('stars-display').textContent = stars;
+            document.getElementById('performance').textContent = performance;
+            document.getElementById('final-score').textContent = state.score;
+            document.getElementById('final-correct').textContent = state.correctCount + '/' + state.maxRounds;
+            document.getElementById('final-level').textContent = state.level;
+            document.getElementById('best-combo').textContent = state.maxCombo;
+
+            endScreen.style.display = 'flex';
+        }
+
+        // Event listeners
+        document.addEventListener('keydown', (e) => {
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd', 'W', 'A', 'S', 'D'].includes(e.key)) {
+                e.preventDefault();
+            }
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') keys.up = true;
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') keys.down = true;
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') keys.up = false;
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') keys.down = false;
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+        });
+
+        // Touch controls
+        ['btn-up', 'btn-down', 'btn-left', 'btn-right'].forEach(id => {
+            const dir = id.split('-')[1];
+            const btn = document.getElementById(id);
+
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                keys[dir] = true;
+            });
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                keys[dir] = false;
+            });
+            btn.addEventListener('mousedown', () => keys[dir] = true);
+            btn.addEventListener('mouseup', () => keys[dir] = false);
+            btn.addEventListener('mouseleave', () => keys[dir] = false);
+        });
+
+        // Start buttons
+        document.getElementById('start-button').addEventListener('click', startGame);
+        document.getElementById('play-again').addEventListener('click', startGame);
+
+        // Initialize
+        createStars();
+    </script>
+</body>
+</html>
