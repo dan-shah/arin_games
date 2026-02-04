@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orca Ocean Adventure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard', cursive;
+            background: linear-gradient(180deg, #0077be 0%, #005a8c 30%, #003d5c 70%, #001a2e 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Ocean effects */
+        .light-rays {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: repeating-linear-gradient(
+                100deg,
+                transparent,
+                transparent 80px,
+                rgba(255,255,255,0.02) 80px,
+                rgba(255,255,255,0.02) 160px
+            );
+            animation: shimmer 10s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-160px); }
+            100% { transform: translateX(160px); }
+        }
+
+        .bubble {
+            position: absolute;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6), rgba(255,255,255,0.1));
+            border-radius: 50%;
+            animation: rise linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(0) translateX(0); opacity: 0.5; }
+            50% { transform: translateY(-50vh) translateX(30px); }
+            100% { transform: translateY(-100vh) translateX(-30px); opacity: 0; }
+        }
+
+        .wave-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(180deg, rgba(135,206,250,0.3) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .ocean-floor {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: linear-gradient(0deg, #2d1f0f 0%, #4a3520 50%, transparent 100%);
+            pointer-events: none;
+        }
+
+        /* Orca - SVG based for better appearance */
+        .orca {
+            position: absolute;
+            width: 180px;
+            height: 100px;
+            transition: all 0.15s ease-out;
+            z-index: 100;
+            cursor: pointer;
+        }
+
+        .orca.flip {
+            transform: scaleX(-1);
+        }
+
+        .orca-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.4));
+        }
+
+        .orca:hover .orca-svg {
+            filter: drop-shadow(0 5px 20px rgba(0, 188, 212, 0.5));
+        }
+
+        /* Swimming animation for orca */
+        .orca.swimming {
+            animation: orcaSwim 2s ease-in-out infinite;
+        }
+
+        @keyframes orcaSwim {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-5px) rotate(-2deg); }
+            75% { transform: translateY(5px) rotate(2deg); }
+        }
+
+        .orca.flip.swimming {
+            animation: orcaSwimFlip 2s ease-in-out infinite;
+        }
+
+        @keyframes orcaSwimFlip {
+            0%, 100% { transform: scaleX(-1) translateY(0) rotate(0deg); }
+            25% { transform: scaleX(-1) translateY(-5px) rotate(2deg); }
+            75% { transform: scaleX(-1) translateY(5px) rotate(-2deg); }
+        }
+
+        /* Animals */
+        .animal {
+            position: absolute;
+            font-size: 60px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            z-index: 50;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));
+        }
+
+        .animal:hover {
+            transform: scale(1.2);
+        }
+
+        .animal.discovered {
+            animation: discovered 0.5s ease-out;
+        }
+
+        @keyframes discovered {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); }
+            100% { transform: scale(1); }
+        }
+
+        /* UI Elements */
+        .start-screen, .animal-info-screen, .collection-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 200;
+            background: rgba(0, 40, 80, 0.95);
+            padding: 40px;
+            border-radius: 25px;
+            border: 4px solid #00bcd4;
+            box-shadow: 0 0 40px rgba(0, 188, 212, 0.5);
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .start-screen h1 {
+            font-size: 2.5em;
+            color: #00bcd4;
+            text-shadow: 3px 3px 0 #006064;
+            margin-bottom: 20px;
+        }
+
+        .start-screen p {
+            color: #b2ebf2;
+            font-size: 1.2em;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .start-btn, .close-btn, .collection-btn {
+            background: linear-gradient(135deg, #00bcd4, #0097a7);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.4em;
+            font-family: inherit;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(0, 188, 212, 0.4);
+            margin: 5px;
+        }
+
+        .start-btn:hover, .close-btn:hover, .collection-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 30px rgba(0, 188, 212, 0.6);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* HUD */
+        .hud {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            z-index: 150;
+            pointer-events: none;
+        }
+
+        .hud > * {
+            pointer-events: auto;
+        }
+
+        .hud-box {
+            background: rgba(0, 40, 80, 0.9);
+            padding: 12px 20px;
+            border-radius: 15px;
+            border: 3px solid #00bcd4;
+            color: white;
+            font-size: 1.1em;
+        }
+
+        .discovered-count {
+            color: #ffeb3b;
+        }
+
+        .collection-btn-small {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1.1em;
+            font-family: inherit;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid #ffb74d;
+        }
+
+        .collection-btn-small:hover {
+            transform: scale(1.05);
+        }
+
+        /* Animal info screen */
+        .animal-info-screen {
+            min-width: 400px;
+        }
+
+        .animal-info-screen .animal-emoji {
+            font-size: 100px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .animal-info-screen h2 {
+            font-size: 2.2em;
+            color: #ffeb3b;
+            margin-bottom: 5px;
+        }
+
+        .animal-info-screen .scientific-name {
+            font-size: 1em;
+            color: #80deea;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+
+        .animal-info-screen .facts-title {
+            font-size: 1.3em;
+            color: #00bcd4;
+            margin-bottom: 15px;
+        }
+
+        .animal-info-screen .fact {
+            background: rgba(0, 150, 167, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 12px;
+            color: white;
+            font-size: 1.1em;
+            line-height: 1.5;
+            text-align: left;
+            border-left: 4px solid #ffeb3b;
+        }
+
+        .animal-info-screen .fact-number {
+            color: #ffeb3b;
+            font-weight: bold;
+        }
+
+        .new-badge {
+            background: #ff5722;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            display: inline-block;
+            margin-bottom: 15px;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Collection screen */
+        .collection-screen {
+            width: 80vw;
+            max-width: 900px;
+        }
+
+        .collection-screen h2 {
+            font-size: 2em;
+            color: #ffeb3b;
+            margin-bottom: 20px;
+        }
+
+        .collection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .collection-item {
+            background: rgba(0, 150, 167, 0.3);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .collection-item:hover {
+            background: rgba(0, 150, 167, 0.5);
+            border-color: #00bcd4;
+        }
+
+        .collection-item.undiscovered {
+            background: rgba(50, 50, 50, 0.5);
+            cursor: default;
+        }
+
+        .collection-item.undiscovered:hover {
+            background: rgba(50, 50, 50, 0.5);
+            border-color: transparent;
+        }
+
+        .collection-item .emoji {
+            font-size: 40px;
+            display: block;
+        }
+
+        .collection-item.undiscovered .emoji {
+            filter: brightness(0);
+            opacity: 0.3;
+        }
+
+        .collection-item .name {
+            font-size: 10px;
+            color: #b2ebf2;
+            margin-top: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .collection-item.undiscovered .name {
+            color: #666;
+        }
+
+        .progress-text {
+            color: #b2ebf2;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        /* Instructions */
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 40, 80, 0.95);
+            padding: 15px 30px;
+            border-radius: 20px;
+            color: #b2ebf2;
+            font-size: 1.1em;
+            z-index: 100;
+            border: 3px solid #00bcd4;
+            text-align: center;
+            line-height: 1.8;
+            max-width: 90vw;
+        }
+
+        .instructions span {
+            color: #ffeb3b;
+            font-weight: bold;
+        }
+
+        .instructions .key {
+            background: #00bcd4;
+            color: #001a2e;
+            padding: 3px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 0 3px;
+        }
+
+        .instructions-dismiss {
+            display: block;
+            margin-top: 10px;
+            color: #80deea;
+            font-size: 0.85em;
+            cursor: pointer;
+        }
+
+        .instructions-dismiss:hover {
+            color: #ffeb3b;
+        }
+
+        /* Help button to show instructions again */
+        .help-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 40, 80, 0.9);
+            color: #00bcd4;
+            border: 3px solid #00bcd4;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            font-size: 1.5em;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .help-btn:hover {
+            background: #00bcd4;
+            color: #001a2e;
+            transform: scale(1.1);
+        }
+
+        /* Kelp decoration */
+        .kelp {
+            position: absolute;
+            bottom: 0;
+            width: 20px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .kelp-strand {
+            position: absolute;
+            bottom: 0;
+            width: 8px;
+            background: linear-gradient(to top, #2d5a27, #4a7c3f);
+            border-radius: 4px;
+            transform-origin: bottom center;
+            animation: sway 4s ease-in-out infinite;
+        }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(-15deg) scaleY(1); }
+            50% { transform: rotate(15deg) scaleY(1.05); }
+        }
+
+        /* Coral */
+        .coral {
+            position: absolute;
+            bottom: 30px;
+            font-size: 50px;
+            pointer-events: none;
+            z-index: 5;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));
+        }
+
+        /* Swimming animation for animals */
+        .animal.swimming {
+            animation: swim 3s ease-in-out infinite;
+        }
+
+        @keyframes swim {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* Mini map */
+        .minimap {
+            position: absolute;
+            bottom: 70px;
+            right: 15px;
+            width: 150px;
+            height: 100px;
+            background: rgba(0, 40, 80, 0.8);
+            border: 2px solid #00bcd4;
+            border-radius: 10px;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .minimap-orca {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #00bcd4;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 5px #00bcd4;
+        }
+
+        .minimap-animal {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ffeb3b;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .minimap-animal.discovered {
+            background: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container" id="game-container">
+        <div class="light-rays"></div>
+        <div class="wave-top"></div>
+        <div class="ocean-floor"></div>
+
+        <!-- HUD -->
+        <div class="hud hidden" id="hud">
+            <div class="hud-box">
+                <span class="discovered-count">Discovered: <span id="discovered-count">0</span> / 100</span>
+            </div>
+            <button class="collection-btn-small" id="open-collection">My Collection</button>
+        </div>
+
+        <!-- Orca - SVG for better appearance -->
+        <div class="orca swimming" id="orca">
+            <svg class="orca-svg" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+                <!-- Main body -->
+                <ellipse cx="90" cy="55" rx="70" ry="30" fill="#1a1a1a"/>
+
+                <!-- White belly/underside -->
+                <path d="M 30 55 Q 50 75 90 80 Q 130 75 150 55 Q 130 70 90 72 Q 50 70 30 55" fill="#ffffff"/>
+
+                <!-- White chin patch -->
+                <ellipse cx="35" cy="58" rx="15" ry="10" fill="#ffffff"/>
+
+                <!-- Head shape refinement -->
+                <ellipse cx="30" cy="50" rx="25" ry="22" fill="#1a1a1a"/>
+
+                <!-- Iconic white eye patch -->
+                <ellipse cx="38" cy="42" rx="12" ry="7" fill="#ffffff" transform="rotate(-15, 38, 42)"/>
+
+                <!-- Eye -->
+                <circle cx="28" cy="48" r="4" fill="#1a1a1a"/>
+                <circle cx="27" cy="47" r="1.5" fill="#333"/>
+
+                <!-- Dorsal fin - tall and curved -->
+                <path d="M 85 25 Q 75 5 90 0 Q 100 5 105 25 Q 95 22 85 25" fill="#1a1a1a"/>
+
+                <!-- Pectoral fin (flipper) -->
+                <ellipse cx="65" cy="72" rx="20" ry="8" fill="#1a1a1a" transform="rotate(25, 65, 72)"/>
+
+                <!-- Tail stock (narrowing) -->
+                <path d="M 150 45 Q 170 50 180 50 Q 170 55 150 60" fill="#1a1a1a"/>
+
+                <!-- Tail flukes -->
+                <path d="M 175 50 Q 195 35 200 30 Q 195 45 180 50" fill="#1a1a1a"/>
+                <path d="M 175 50 Q 195 65 200 70 Q 195 55 180 50" fill="#1a1a1a"/>
+
+                <!-- Saddle patch (gray marking behind dorsal) -->
+                <path d="M 105 30 Q 115 35 125 45 Q 115 40 105 35 Q 108 32 105 30" fill="#4a4a4a" opacity="0.6"/>
+
+                <!-- Subtle shine on body -->
+                <ellipse cx="70" cy="42" rx="30" ry="8" fill="#2a2a2a" opacity="0.5"/>
+            </svg>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions hidden" id="instructions">
+            <span class="key">Arrow Keys</span> or <span class="key">W A S D</span> to swim around the ocean<br>
+            <span>Click on animals</span> to discover them and learn fun facts!<br>
+            Use the <span>minimap</span> (bottom right) to find animals - yellow dots are undiscovered!
+            <div class="instructions-dismiss" id="dismiss-instructions">Click here to hide (press ? to show again)</div>
+        </div>
+
+        <!-- Help button -->
+        <button class="help-btn hidden" id="help-btn">?</button>
+
+        <!-- Mini map -->
+        <div class="minimap hidden" id="minimap">
+            <div class="minimap-orca" id="minimap-orca"></div>
+        </div>
+
+        <!-- Start screen -->
+        <div class="start-screen" id="start-screen">
+            <h1>Orca Ocean Adventure!</h1>
+            <p>Swim through the ocean as an orca and discover amazing sea creatures!</p>
+            <div style="background: rgba(0,150,167,0.3); padding: 20px; border-radius: 15px; margin: 20px 0; text-align: left;">
+                <div style="margin-bottom: 12px;"><span style="color: #ffeb3b; font-weight: bold;">HOW TO PLAY:</span></div>
+                <div style="margin-bottom: 8px;">Use <span style="background: #00bcd4; color: #001a2e; padding: 2px 8px; border-radius: 4px; font-weight: bold;">Arrow Keys</span> or <span style="background: #00bcd4; color: #001a2e; padding: 2px 8px; border-radius: 4px; font-weight: bold;">W A S D</span> to swim</div>
+                <div style="margin-bottom: 8px;"><span style="color: #ffeb3b;">Click on animals</span> when you find them to learn fun facts!</div>
+                <div style="margin-bottom: 8px;">Watch the <span style="color: #ffeb3b;">minimap</span> (bottom right) - yellow dots are animals to find!</div>
+                <div>Discover all <span style="color: #ffeb3b;">100 sea creatures</span> to complete your collection!</div>
+            </div>
+            <button class="start-btn" id="start-btn">Start Swimming!</button>
+        </div>
+
+        <!-- Animal info screen -->
+        <div class="animal-info-screen hidden" id="animal-info-screen">
+            <div class="new-badge hidden" id="new-badge">NEW DISCOVERY!</div>
+            <span class="animal-emoji" id="info-emoji"></span>
+            <h2 id="info-name"></h2>
+            <div class="scientific-name" id="info-scientific"></div>
+            <div class="facts-title">Fun Facts!</div>
+            <div class="fact" id="fact-1"></div>
+            <div class="fact" id="fact-2"></div>
+            <div class="fact" id="fact-3"></div>
+            <button class="close-btn" id="close-info">Keep Exploring!</button>
+        </div>
+
+        <!-- Collection screen -->
+        <div class="collection-screen hidden" id="collection-screen">
+            <h2>My Ocean Collection</h2>
+            <div class="progress-text" id="progress-text"></div>
+            <div class="collection-grid" id="collection-grid"></div>
+            <button class="close-btn" id="close-collection">Back to Ocean</button>
+        </div>
+    </div>
+
+    <script>
+        // 100 Ocean animals with 3 facts each
+        const animals = [
+            {
+                name: 'Blue Whale',
+                emoji: '🐋',
+                scientific: 'Balaenoptera musculus',
+                facts: [
+                    'Blue whales are the largest animals that have EVER lived - even bigger than dinosaurs!',
+                    'A blue whale\'s heart is as big as a small car and weighs about 400 pounds!',
+                    'Baby blue whales drink 100 gallons of milk every day and gain 200 pounds daily!'
+                ]
+            },
+            {
+                name: 'Dolphin',
+                emoji: '🐬',
+                scientific: 'Delphinus delphis',
+                facts: [
+                    'Dolphins sleep with one eye open and half their brain awake to watch for danger!',
+                    'Each dolphin has its own special whistle, like a name, that other dolphins recognize!',
+                    'Dolphins can swim up to 20 miles per hour and love to surf on waves!'
+                ]
+            },
+            {
+                name: 'Octopus',
+                emoji: '🐙',
+                scientific: 'Octopus vulgaris',
+                facts: [
+                    'Octopuses have THREE hearts and BLUE blood!',
+                    'An octopus can squeeze through any hole bigger than its beak - even a tiny crack!',
+                    'Octopuses are super smart and can open jars, solve puzzles, and even recognize people!'
+                ]
+            },
+            {
+                name: 'Sea Turtle',
+                emoji: '🐢',
+                scientific: 'Chelonia mydas',
+                facts: [
+                    'Sea turtles can hold their breath for up to 7 hours while sleeping underwater!',
+                    'Mother sea turtles return to the exact same beach where they were born to lay eggs!',
+                    'Sea turtles have been around since the time of dinosaurs - over 100 million years!'
+                ]
+            },
+            {
+                name: 'Shark',
+                emoji: '🦈',
+                scientific: 'Carcharodon carcharias',
+                facts: [
+                    'Sharks can smell a tiny drop of blood in water from over a mile away!',
+                    'Sharks never run out of teeth - they can grow over 30,000 teeth in their lifetime!',
+                    'Sharks have been around for over 400 million years, even before trees existed!'
+                ]
+            },
+            {
+                name: 'Jellyfish',
+                emoji: '🪼',
+                scientific: 'Aurelia aurita',
+                facts: [
+                    'Jellyfish have no brain, no heart, and no bones - they\'re 95% water!',
+                    'Some jellyfish can glow in the dark with beautiful blue and green lights!',
+                    'A group of jellyfish is called a "smack" - isn\'t that a funny name?'
+                ]
+            },
+            {
+                name: 'Starfish',
+                emoji: '⭐',
+                scientific: 'Asterias rubens',
+                facts: [
+                    'Starfish can regrow their arms if one breaks off - like magic!',
+                    'Starfish don\'t have blood - they pump seawater through their bodies instead!',
+                    'A starfish eats by pushing its stomach OUT of its body and onto its food!'
+                ]
+            },
+            {
+                name: 'Crab',
+                emoji: '🦀',
+                scientific: 'Cancer pagurus',
+                facts: [
+                    'Crabs walk sideways because their legs bend that way - try walking like a crab!',
+                    'Crabs have teeth in their stomachs to grind up food!',
+                    'When crabs grow too big for their shell, they find a new one - like changing clothes!'
+                ]
+            },
+            {
+                name: 'Lobster',
+                emoji: '🦞',
+                scientific: 'Homarus americanus',
+                facts: [
+                    'Lobsters can live for over 100 years and keep growing their whole lives!',
+                    'Lobsters taste with their feet and smell with their antennae!',
+                    'Lobsters are actually dark blue or green - they only turn red when cooked!'
+                ]
+            },
+            {
+                name: 'Shrimp',
+                emoji: '🦐',
+                scientific: 'Penaeus vannamei',
+                facts: [
+                    'Shrimp have their hearts in their heads!',
+                    'Some shrimp can make a sound louder than a jet engine by snapping their claws!',
+                    'Shrimp can swim backwards super fast to escape from danger!'
+                ]
+            },
+            {
+                name: 'Seahorse',
+                emoji: '🐴',
+                scientific: 'Hippocampus',
+                facts: [
+                    'Seahorse dads carry the babies in a special pouch until they\'re born!',
+                    'Seahorses hold tails with their partner - they\'re very romantic!',
+                    'Seahorses don\'t have teeth or stomachs, so they eat almost constantly!'
+                ]
+            },
+            {
+                name: 'Tropical Fish',
+                emoji: '🐠',
+                scientific: 'Amphiprion ocellaris',
+                facts: [
+                    'Clownfish live inside stinging sea anemones but don\'t get hurt!',
+                    'All clownfish are born male - some change to female when they grow up!',
+                    'Clownfish never swim far from home - they\'re real homebodies!'
+                ]
+            },
+            {
+                name: 'Blowfish',
+                emoji: '🐡',
+                scientific: 'Tetraodontidae',
+                facts: [
+                    'Pufferfish can blow up like a balloon to scare away predators!',
+                    'Pufferfish are one of the most poisonous animals in the world!',
+                    'Some pufferfish create beautiful patterns in the sand to attract mates!'
+                ]
+            },
+            {
+                name: 'Whale',
+                emoji: '🐳',
+                scientific: 'Megaptera novaeangliae',
+                facts: [
+                    'Humpback whales sing songs that can last for hours and travel thousands of miles!',
+                    'Whales can hold their breath for up to 90 minutes!',
+                    'A whale\'s spray of water can shoot 30 feet high - like a fountain!'
+                ]
+            },
+            {
+                name: 'Squid',
+                emoji: '🦑',
+                scientific: 'Loligo vulgaris',
+                facts: [
+                    'Squid have the largest eyes in the animal kingdom - as big as dinner plates!',
+                    'Squid squirt ink to confuse predators while they escape!',
+                    'Some squid can fly through the air to escape from predators!'
+                ]
+            },
+            {
+                name: 'Seal',
+                emoji: '🦭',
+                scientific: 'Phoca vitulina',
+                facts: [
+                    'Seals can sleep underwater and come up to breathe without waking up!',
+                    'Seal whiskers can sense fish swimming nearby in murky water!',
+                    'Baby seals, called pups, can swim within hours of being born!'
+                ]
+            },
+            {
+                name: 'Penguin',
+                emoji: '🐧',
+                scientific: 'Aptenodytes forsteri',
+                facts: [
+                    'Penguins can drink salt water because they have special glands to filter out salt!',
+                    'Emperor penguin dads keep eggs warm on their feet for two months in freezing cold!',
+                    'Penguins can\'t fly in the air, but they "fly" through the water super fast!'
+                ]
+            },
+            {
+                name: 'Polar Bear',
+                emoji: '🐻‍❄️',
+                scientific: 'Ursus maritimus',
+                facts: [
+                    'Polar bear fur isn\'t white - it\'s actually clear and reflects light!',
+                    'Polar bears can smell seals from almost a mile away!',
+                    'Under their fur, polar bears have black skin to absorb heat from the sun!'
+                ]
+            },
+            {
+                name: 'Walrus',
+                emoji: '🦦',
+                scientific: 'Odobenus rosmarus',
+                facts: [
+                    'Walruses use their tusks like ice picks to pull themselves out of the water!',
+                    'A walrus can eat 4,000 clams in one feeding session!',
+                    'Walruses can slow their heartbeat to stay underwater for up to 10 minutes!'
+                ]
+            },
+            {
+                name: 'Manatee',
+                emoji: '🌊',
+                scientific: 'Trichechus manatus',
+                facts: [
+                    'Manatees are called "sea cows" because they munch on seagrass all day!',
+                    'Manatees have no natural predators - they\'re too big and gentle!',
+                    'Manatees replace their teeth throughout their lives - new ones grow in the back!'
+                ]
+            },
+            {
+                name: 'Manta Ray',
+                emoji: '🛸',
+                scientific: 'Manta birostris',
+                facts: [
+                    'Manta rays can grow up to 23 feet wide - wider than a car is long!',
+                    'Manta rays are super smart and can recognize themselves in mirrors!',
+                    'Manta rays do somersaults while eating to scoop up more plankton!'
+                ]
+            },
+            {
+                name: 'Stingray',
+                emoji: '🔷',
+                scientific: 'Dasyatis pastinaca',
+                facts: [
+                    'Stingrays flap their fins like wings to "fly" through the water!',
+                    'Stingrays can sense the heartbeat of animals hiding under the sand!',
+                    'Baby stingrays are born looking like tiny copies of their parents!'
+                ]
+            },
+            {
+                name: 'Electric Eel',
+                emoji: '⚡',
+                scientific: 'Electrophorus electricus',
+                facts: [
+                    'Electric eels can zap with 600 volts - that\'s like 5 times a wall outlet!',
+                    'Electric eels breathe air and must come to the surface every 10 minutes!',
+                    'Electric eels use electricity to find food in murky water like radar!'
+                ]
+            },
+            {
+                name: 'Anglerfish',
+                emoji: '🎣',
+                scientific: 'Lophius piscatorius',
+                facts: [
+                    'Anglerfish have a glowing light on their head to attract prey in the dark!',
+                    'Female anglerfish are 10 times bigger than males!',
+                    'Anglerfish live so deep underwater that no sunlight ever reaches them!'
+                ]
+            },
+            {
+                name: 'Swordfish',
+                emoji: '⚔️',
+                scientific: 'Xiphias gladius',
+                facts: [
+                    'Swordfish can swim over 60 miles per hour - one of the fastest fish ever!',
+                    'Swordfish use their "sword" to slash at fish to stun them before eating!',
+                    'Swordfish can heat up their eyes and brain to see better in cold, deep water!'
+                ]
+            },
+            {
+                name: 'Hammerhead Shark',
+                emoji: '🔨',
+                scientific: 'Sphyrna mokarran',
+                facts: [
+                    'Hammerhead sharks have eyes on the sides of their hammer, giving them 360-degree vision!',
+                    'Hammerheads use their wide head to pin stingrays to the ocean floor!',
+                    'Baby hammerhead sharks are born in groups of up to 50 at once!'
+                ]
+            },
+            {
+                name: 'Narwhal',
+                emoji: '🦄',
+                scientific: 'Monodon monoceros',
+                facts: [
+                    'The narwhal\'s "horn" is actually a giant tooth that grows through its lip!',
+                    'Narwhals are called the "unicorns of the sea" because of their spiral tusk!',
+                    'Narwhal tusks can sense temperature, pressure, and salt levels in water!'
+                ]
+            },
+            {
+                name: 'Beluga Whale',
+                emoji: '⚪',
+                scientific: 'Delphinapterus leucas',
+                facts: [
+                    'Beluga whales can move their faces to make expressions like humans!',
+                    'Belugas are so loud they\'re called "canaries of the sea" - you can hear them above water!',
+                    'Belugas can turn their heads because they have flexible necks unlike other whales!'
+                ]
+            },
+            {
+                name: 'Moray Eel',
+                emoji: '🐍',
+                scientific: 'Muraena helena',
+                facts: [
+                    'Moray eels have two sets of jaws - one in their mouth and one in their throat!',
+                    'Moray eels team up with grouper fish to hunt together!',
+                    'Morays keep their mouths open to breathe, not to be scary!'
+                ]
+            },
+            {
+                name: 'Hermit Crab',
+                emoji: '🏠',
+                scientific: 'Pagurus bernhardus',
+                facts: [
+                    'Hermit crabs wear empty shells as portable homes and switch when they grow!',
+                    'Some hermit crabs put sea anemones on their shells for protection!',
+                    'Hermit crabs form lines to swap shells - the biggest gets the new shell first!'
+                ]
+            },
+            {
+                name: 'Sea Urchin',
+                emoji: '🟣',
+                scientific: 'Strongylocentrotus',
+                facts: [
+                    'Sea urchins have teeth called "Aristotle\'s lantern" to scrape food off rocks!',
+                    'Sea urchin spines can regenerate if they break off!',
+                    'Some sea urchins wear shells, rocks, and seaweed as camouflage hats!'
+                ]
+            },
+            {
+                name: 'Sea Cucumber',
+                emoji: '🥒',
+                scientific: 'Holothuroidea',
+                facts: [
+                    'Sea cucumbers breathe through their butts!',
+                    'When scared, sea cucumbers can shoot their guts out and grow them back!',
+                    'Sea cucumbers are ocean vacuum cleaners - they eat sand and poop out clean sand!'
+                ]
+            },
+            {
+                name: 'Coral',
+                emoji: '🪸',
+                scientific: 'Anthozoa',
+                facts: [
+                    'Coral reefs are made by tiny animals, not plants or rocks!',
+                    'Coral reefs are home to 25% of all ocean animals!',
+                    'Coral can live for thousands of years - some are older than the pyramids!'
+                ]
+            },
+            {
+                name: 'Clam',
+                emoji: '🐚',
+                scientific: 'Tridacna gigas',
+                facts: [
+                    'Giant clams can live for over 100 years and weigh 500 pounds!',
+                    'Clams don\'t have eyes, ears, or brains, but they can still sense danger!',
+                    'Some clams can jump by squirting water to escape starfish!'
+                ]
+            },
+            {
+                name: 'Sea Anemone',
+                emoji: '🌺',
+                scientific: 'Actiniaria',
+                facts: [
+                    'Sea anemones look like flowers but are actually hungry animals!',
+                    'Sea anemones can live for 80 years and never get sick!',
+                    'Sea anemones can move - slowly sliding along rocks to find better spots!'
+                ]
+            },
+            {
+                name: 'Barracuda',
+                emoji: '🔪',
+                scientific: 'Sphyraena barracuda',
+                facts: [
+                    'Barracudas can swim up to 35 miles per hour in short bursts!',
+                    'Barracudas are attracted to shiny things that look like fish scales!',
+                    'Barracudas have razor-sharp teeth and can grow up to 6 feet long!'
+                ]
+            },
+            {
+                name: 'Flying Fish',
+                emoji: '✈️',
+                scientific: 'Exocoetidae',
+                facts: [
+                    'Flying fish can glide through the air for 650 feet - longer than two football fields!',
+                    'Flying fish leap out of water to escape from tuna and dolphins!',
+                    'Flying fish can reach heights of 20 feet above the water!'
+                ]
+            },
+            {
+                name: 'Parrotfish',
+                emoji: '🦜',
+                scientific: 'Scaridae',
+                facts: [
+                    'Parrotfish poop out sand - one fish makes 800 pounds of sand per year!',
+                    'Parrotfish make a sleeping bag of mucus every night to protect themselves!',
+                    'Parrotfish teeth are so strong they can bite through coral!'
+                ]
+            },
+            {
+                name: 'Lionfish',
+                emoji: '🦁',
+                scientific: 'Pterois volitans',
+                facts: [
+                    'Lionfish have venomous spines that can really hurt predators!',
+                    'Lionfish can eat fish more than half their own size!',
+                    'Lionfish spread their fancy fins to corner prey against the reef!'
+                ]
+            },
+            {
+                name: 'Sunfish',
+                emoji: '☀️',
+                scientific: 'Mola mola',
+                facts: [
+                    'Ocean sunfish are the heaviest bony fish - up to 5,000 pounds!',
+                    'Sunfish lay 300 million eggs at once - more than any other animal!',
+                    'Sunfish float on their sides at the surface to warm up in the sun!'
+                ]
+            },
+            {
+                name: 'Seahorse Dragon',
+                emoji: '🐉',
+                scientific: 'Phycodurus eques',
+                facts: [
+                    'Leafy sea dragons look exactly like floating seaweed to hide from predators!',
+                    'Sea dragon dads carry hundreds of eggs on their tails until they hatch!',
+                    'Sea dragons have no teeth and slurp up tiny shrimp like a vacuum!'
+                ]
+            },
+            {
+                name: 'Mantis Shrimp',
+                emoji: '🥊',
+                scientific: 'Stomatopoda',
+                facts: [
+                    'Mantis shrimp punch so fast and hard they can break aquarium glass!',
+                    'Mantis shrimp can see 16 types of color - humans only see 3!',
+                    'A mantis shrimp punch is as fast as a bullet - the fastest strike in nature!'
+                ]
+            },
+            {
+                name: 'Nautilus',
+                emoji: '🐌',
+                scientific: 'Nautilus pompilius',
+                facts: [
+                    'Nautiluses have been around for 500 million years - before fish existed!',
+                    'Nautiluses have up to 90 tentacles - way more than octopuses!',
+                    'Nautiluses live in a spiral shell and add new chambers as they grow!'
+                ]
+            },
+            {
+                name: 'Sea Snake',
+                emoji: '🐍',
+                scientific: 'Hydrophiinae',
+                facts: [
+                    'Sea snakes are some of the most venomous animals in the world!',
+                    'Sea snakes can hold their breath for up to 2 hours!',
+                    'Sea snakes breathe through their skin to stay underwater longer!'
+                ]
+            },
+            {
+                name: 'Oarfish',
+                emoji: '📏',
+                scientific: 'Regalecus glesne',
+                facts: [
+                    'Oarfish can grow to 36 feet - longer than a school bus!',
+                    'Oarfish are so rare that seeing one was thought to predict earthquakes!',
+                    'Oarfish have no scales and have silvery, ribbon-like bodies!'
+                ]
+            },
+            {
+                name: 'Whale Shark',
+                emoji: '🐋',
+                scientific: 'Rhincodon typus',
+                facts: [
+                    'Whale sharks are the biggest fish in the ocean - up to 40 feet long!',
+                    'Despite their size, whale sharks only eat tiny plankton and small fish!',
+                    'Each whale shark has a unique pattern of spots - like fingerprints!'
+                ]
+            },
+            {
+                name: 'Basking Shark',
+                emoji: '😮',
+                scientific: 'Cetorhinus maximus',
+                facts: [
+                    'Basking sharks swim with their mouths wide open to catch tiny food!',
+                    'Basking sharks are the second biggest fish - only whale sharks are bigger!',
+                    'Basking sharks filter 2,000 tons of water per hour through their gills!'
+                ]
+            },
+            {
+                name: 'Goblin Shark',
+                emoji: '👹',
+                scientific: 'Mitsukurina owstoni',
+                facts: [
+                    'Goblin sharks can shoot their jaws forward to grab prey!',
+                    'Goblin sharks live so deep they\'re rarely seen by humans!',
+                    'Goblin sharks are sometimes called "living fossils" because they\'re so ancient!'
+                ]
+            },
+            {
+                name: 'Thresher Shark',
+                emoji: '🌊',
+                scientific: 'Alopias vulpinus',
+                facts: [
+                    'Thresher sharks use their super long tails to slap and stun fish!',
+                    'A thresher shark\'s tail can be as long as its whole body!',
+                    'Thresher sharks can leap completely out of the water!'
+                ]
+            },
+            {
+                name: 'Tiger Shark',
+                emoji: '🐅',
+                scientific: 'Galeocerdo cuvier',
+                facts: [
+                    'Tiger sharks have stripes like tigers when they\'re young!',
+                    'Tiger sharks eat almost anything - even license plates have been found in their bellies!',
+                    'Tiger sharks can sense electricity made by other animals\' muscles!'
+                ]
+            },
+            {
+                name: 'Nurse Shark',
+                emoji: '👩‍⚕️',
+                scientific: 'Ginglymostoma cirratum',
+                facts: [
+                    'Nurse sharks are gentle and like to rest in piles with other nurse sharks!',
+                    'Nurse sharks suck up food like a vacuum cleaner!',
+                    'Baby nurse sharks are born fully formed and ready to swim!'
+                ]
+            },
+            {
+                name: 'Wobbegong Shark',
+                emoji: '🥸',
+                scientific: 'Orectolobidae',
+                facts: [
+                    'Wobbegong sharks are so flat and bumpy they look like the ocean floor!',
+                    'Wobbegong means "living rock" in an Australian Aboriginal language!',
+                    'Wobbegongs have tiny skin tassels on their faces like a beard!'
+                ]
+            },
+            {
+                name: 'Blue-Ringed Octopus',
+                emoji: '💙',
+                scientific: 'Hapalochlaena',
+                facts: [
+                    'Blue-ringed octopuses are tiny but have enough venom for 25 adults!',
+                    'When scared, their blue rings flash super bright as a warning!',
+                    'Blue-ringed octopuses are only the size of a golf ball!'
+                ]
+            },
+            {
+                name: 'Giant Pacific Octopus',
+                emoji: '🐙',
+                scientific: 'Enteroctopus dofleini',
+                facts: [
+                    'Giant Pacific octopuses can grow arms up to 16 feet long!',
+                    'They\'re so smart they can escape from almost any container!',
+                    'Mother octopuses don\'t eat for 6 months while guarding their eggs!'
+                ]
+            },
+            {
+                name: 'Dumbo Octopus',
+                emoji: '🐘',
+                scientific: 'Grimpoteuthis',
+                facts: [
+                    'Dumbo octopuses have ear-like fins that look like the Disney elephant!',
+                    'They live deeper than any other octopus - over 13,000 feet down!',
+                    'Dumbo octopuses swallow their prey whole in one gulp!'
+                ]
+            },
+            {
+                name: 'Cuttlefish',
+                emoji: '🎨',
+                scientific: 'Sepia officinalis',
+                facts: [
+                    'Cuttlefish can change color instantly to camouflage or communicate!',
+                    'Cuttlefish have W-shaped pupils - the weirdest eyes in the ocean!',
+                    'Cuttlefish have green-blue blood!'
+                ]
+            },
+            {
+                name: 'Giant Squid',
+                emoji: '🦑',
+                scientific: 'Architeuthis dux',
+                facts: [
+                    'Giant squid have the largest eyes in the animal kingdom - as big as basketballs!',
+                    'Giant squid live so deep that scientists have only seen a few alive!',
+                    'Giant squid can grow to 43 feet long!'
+                ]
+            },
+            {
+                name: 'Vampire Squid',
+                emoji: '🧛',
+                scientific: 'Vampyroteuthis infernalis',
+                facts: [
+                    'Vampire squid don\'t drink blood - they eat "marine snow" (tiny floating bits)!',
+                    'When scared, they turn inside out to show spiky-looking webbing!',
+                    'Vampire squid can glow in the dark and make glowing mucus!'
+                ]
+            },
+            {
+                name: 'King Crab',
+                emoji: '👑',
+                scientific: 'Paralithodes camtschaticus',
+                facts: [
+                    'King crabs can have a leg span of 6 feet - as wide as a person is tall!',
+                    'King crabs have to climb out of their shell to grow, then grow a new one!',
+                    'King crabs have blue blood that helps them survive cold water!'
+                ]
+            },
+            {
+                name: 'Spider Crab',
+                emoji: '🕷️',
+                scientific: 'Macrocheira kaempferi',
+                facts: [
+                    'Japanese spider crabs have the longest leg span of any crab - up to 12 feet!',
+                    'Spider crabs decorate their shells with seaweed and sponges as camouflage!',
+                    'Spider crabs can live for up to 100 years!'
+                ]
+            },
+            {
+                name: 'Horseshoe Crab',
+                emoji: '🐴',
+                scientific: 'Limulus polyphemus',
+                facts: [
+                    'Horseshoe crabs aren\'t really crabs - they\'re more related to spiders!',
+                    'Horseshoe crabs have blue blood that\'s used to make medicine!',
+                    'They\'ve been around for 450 million years - older than dinosaurs!'
+                ]
+            },
+            {
+                name: 'Sea Spider',
+                emoji: '🕸️',
+                scientific: 'Pycnogonida',
+                facts: [
+                    'Sea spiders have such small bodies that their guts go into their legs!',
+                    'Some sea spiders can grow as big as dinner plates in the deep ocean!',
+                    'Sea spider dads carry the eggs until they hatch!'
+                ]
+            },
+            {
+                name: 'Isopod',
+                emoji: '🪲',
+                scientific: 'Bathynomus giganteus',
+                facts: [
+                    'Giant isopods look like huge roly-poly bugs and can grow to 2.5 feet!',
+                    'Isopods can survive for years without eating anything!',
+                    'Isopods have been around since before the dinosaurs!'
+                ]
+            },
+            {
+                name: 'Bristle Worm',
+                emoji: '🪱',
+                scientific: 'Polychaeta',
+                facts: [
+                    'Bristle worms have sharp bristles that can sting like tiny needles!',
+                    'Some bristle worms glow green when disturbed!',
+                    'Bristle worms can regrow their whole body from just a piece!'
+                ]
+            },
+            {
+                name: 'Christmas Tree Worm',
+                emoji: '🎄',
+                scientific: 'Spirobranchus giganteus',
+                facts: [
+                    'Christmas tree worms look exactly like tiny decorated Christmas trees!',
+                    'The colorful "trees" are actually gills for breathing and catching food!',
+                    'They come in almost every color - blue, yellow, orange, red, white!'
+                ]
+            },
+            {
+                name: 'Feather Duster Worm',
+                emoji: '🪶',
+                scientific: 'Sabellidae',
+                facts: [
+                    'Feather duster worms have feathery fans that filter food from the water!',
+                    'They can sense shadows and zip back into their tubes super fast!',
+                    'Their tubes are made from sand and tiny shell pieces glued together!'
+                ]
+            },
+            {
+                name: 'Sea Slug',
+                emoji: '🌈',
+                scientific: 'Nudibranchia',
+                facts: [
+                    'Sea slugs are the most colorful animals in the ocean!',
+                    'Some sea slugs steal stinging cells from jellyfish and use them for defense!',
+                    'Sea slugs breathe through frilly gills on their backs!'
+                ]
+            },
+            {
+                name: 'Sea Bunny',
+                emoji: '🐰',
+                scientific: 'Jorunna parva',
+                facts: [
+                    'Sea bunnies look like fluffy bunnies with ears, but they\'re sea slugs!',
+                    'Their "ears" are actually sensors that smell and taste the water!',
+                    'Sea bunnies are only about 1 inch long - tiny and cute!'
+                ]
+            },
+            {
+                name: 'Spanish Dancer',
+                emoji: '💃',
+                scientific: 'Hexabranchus sanguineus',
+                facts: [
+                    'Spanish dancers swim by twirling their bodies like a flamenco dancer!',
+                    'They can grow up to 16 inches long - that\'s a big sea slug!',
+                    'Spanish dancers are red and white and really pretty!'
+                ]
+            },
+            {
+                name: 'Sea Lemon',
+                emoji: '🍋',
+                scientific: 'Doris pseudoargus',
+                facts: [
+                    'Sea lemons are yellow sea slugs that look like lemons!',
+                    'When bothered, they release a lemon-scented smell!',
+                    'Sea lemons eat sponges - that\'s their favorite food!'
+                ]
+            },
+            {
+                name: 'Moon Jelly',
+                emoji: '🌙',
+                scientific: 'Aurelia aurita',
+                facts: [
+                    'Moon jellies got their name from their glowing, moon-like appearance!',
+                    'You can see their four-leaf clover pattern - those are their stomachs!',
+                    'Moon jellies don\'t have stings strong enough to hurt humans!'
+                ]
+            },
+            {
+                name: 'Lion\'s Mane Jellyfish',
+                emoji: '🦁',
+                scientific: 'Cyanea capillata',
+                facts: [
+                    'Lion\'s mane jellyfish can have tentacles 120 feet long - longer than a blue whale!',
+                    'They\'re the largest jellyfish in the world!',
+                    'Their tentacles have millions of stinging cells!'
+                ]
+            },
+            {
+                name: 'Box Jellyfish',
+                emoji: '📦',
+                scientific: 'Cubozoa',
+                facts: [
+                    'Box jellyfish have 24 eyes - some that can actually see images!',
+                    'They\'re some of the most venomous creatures on Earth!',
+                    'Box jellyfish can swim - they don\'t just float like other jellyfish!'
+                ]
+            },
+            {
+                name: 'Portuguese Man O\' War',
+                emoji: '⛵',
+                scientific: 'Physalia physalis',
+                facts: [
+                    'Man O\' Wars aren\'t jellyfish - they\'re actually four animals living together!',
+                    'They have a balloon-like float that catches the wind like a sail!',
+                    'Their stinging tentacles can be 165 feet long!'
+                ]
+            },
+            {
+                name: 'By-the-wind Sailor',
+                emoji: '🛶',
+                scientific: 'Velella velella',
+                facts: [
+                    'By-the-wind sailors have a clear "sail" that catches the wind!',
+                    'Millions of them wash up on beaches together!',
+                    'They\'re bright blue and live right at the ocean surface!'
+                ]
+            },
+            {
+                name: 'Sea Pen',
+                emoji: '🖊️',
+                scientific: 'Pennatulacea',
+                facts: [
+                    'Sea pens look like old-fashioned quill pens stuck in the sand!',
+                    'They can glow in beautiful colors when touched!',
+                    'Sea pens can pull themselves underground to hide from predators!'
+                ]
+            },
+            {
+                name: 'Basket Star',
+                emoji: '🧺',
+                scientific: 'Gorgonocephalus',
+                facts: [
+                    'Basket stars have branching arms that look like a tangled basket!',
+                    'Their arms can have over 5,000 tips to catch tiny floating animals!',
+                    'Basket stars curl up into balls during the day and spread out at night!'
+                ]
+            },
+            {
+                name: 'Brittle Star',
+                emoji: '💫',
+                scientific: 'Ophiuroidea',
+                facts: [
+                    'Brittle stars move by wiggling their arms like snakes!',
+                    'If a predator grabs their arm, it breaks off and they escape!',
+                    'Some brittle stars glow bright green when scared!'
+                ]
+            },
+            {
+                name: 'Feather Star',
+                emoji: '🌟',
+                scientific: 'Crinoidea',
+                facts: [
+                    'Feather stars can swim by flapping their feathery arms!',
+                    'They come in amazing colors - yellow, red, orange, green!',
+                    'Feather stars are actually related to sea urchins and starfish!'
+                ]
+            },
+            {
+                name: 'Sand Dollar',
+                emoji: '💰',
+                scientific: 'Clypeasteroida',
+                facts: [
+                    'Sand dollars are fuzzy and purple when alive - they turn white when they die!',
+                    'Sand dollars stand up on their edge in the sand to catch food!',
+                    'The flower pattern on top is actually their breathing holes!'
+                ]
+            },
+            {
+                name: 'Sea Biscuit',
+                emoji: '🍪',
+                scientific: 'Clypeaster',
+                facts: [
+                    'Sea biscuits look like puffy sand dollars!',
+                    'They burrow through sand looking for tiny bits of food!',
+                    'Sea biscuits are covered in tiny spines for moving and digging!'
+                ]
+            },
+            {
+                name: 'Crown-of-Thorns Starfish',
+                emoji: '👑',
+                scientific: 'Acanthaster planci',
+                facts: [
+                    'Crown-of-thorns starfish are covered in venomous spines!',
+                    'They eat coral and can damage coral reefs if there are too many!',
+                    'They can have up to 21 arms!'
+                ]
+            },
+            {
+                name: 'Sunflower Sea Star',
+                emoji: '🌻',
+                scientific: 'Pycnopodia helianthoides',
+                facts: [
+                    'Sunflower sea stars can have up to 24 arms!',
+                    'They\'re one of the fastest sea stars and can move 3 feet per minute!',
+                    'Sunflower stars are the biggest sea stars in the world!'
+                ]
+            },
+            {
+                name: 'Chocolate Chip Sea Star',
+                emoji: '🍪',
+                scientific: 'Protoreaster nodosus',
+                facts: [
+                    'Chocolate chip stars have bumps that look like chocolate chips!',
+                    'They come in colors like brown, orange, red, and gray!',
+                    'They eat coral and sponges by pushing their stomachs onto the food!'
+                ]
+            },
+            {
+                name: 'Blue Sea Star',
+                emoji: '💙',
+                scientific: 'Linckia laevigata',
+                facts: [
+                    'Blue sea stars are bright blue like the sky!',
+                    'If an arm breaks off, it can grow into a whole new sea star!',
+                    'They can be found on coral reefs in warm tropical waters!'
+                ]
+            },
+            {
+                name: 'Tube Worm',
+                emoji: '🌡️',
+                scientific: 'Riftia pachyptila',
+                facts: [
+                    'Giant tube worms live near underwater volcanoes in boiling hot water!',
+                    'They have no mouth or stomach - bacteria inside them make their food!',
+                    'They can grow up to 8 feet tall!'
+                ]
+            },
+            {
+                name: 'Blobfish',
+                emoji: '😢',
+                scientific: 'Psychrolutes marcidus',
+                facts: [
+                    'Blobfish look normal underwater - they only look blobby when brought up!',
+                    'They live so deep where pressure is 100 times the surface!',
+                    'Blobfish have no muscles - they just float above the seafloor!'
+                ]
+            },
+            {
+                name: 'Fangtooth Fish',
+                emoji: '😬',
+                scientific: 'Anoplogaster cornuta',
+                facts: [
+                    'Fangtooth fish have the largest teeth compared to body size of any fish!',
+                    'They live in complete darkness over a mile deep!',
+                    'Despite looking scary, they\'re only about 6 inches long!'
+                ]
+            },
+            {
+                name: 'Viperfish',
+                emoji: '🐍',
+                scientific: 'Chauliodus sloani',
+                facts: [
+                    'Viperfish have teeth so long they can\'t close their mouths!',
+                    'They attract prey with a glowing light on their dorsal fin!',
+                    'Viperfish can unhinge their jaws to swallow large prey!'
+                ]
+            },
+            {
+                name: 'Hatchetfish',
+                emoji: '🪓',
+                scientific: 'Sternoptychidae',
+                facts: [
+                    'Hatchetfish are shaped like little hatchets!',
+                    'They have lights on their bellies to hide their shadow from predators below!',
+                    'Their huge eyes point upward to spot prey above them!'
+                ]
+            },
+            {
+                name: 'Lanternfish',
+                emoji: '🏮',
+                scientific: 'Myctophidae',
+                facts: [
+                    'Lanternfish are the most common fish in the deep ocean!',
+                    'They have glowing spots all over their bodies like little lanterns!',
+                    'Billions of lanternfish swim up to the surface every night to feed!'
+                ]
+            },
+            {
+                name: 'Barreleye Fish',
+                emoji: '👀',
+                scientific: 'Macropinna microstoma',
+                facts: [
+                    'Barreleye fish have a see-through head - you can see their brain!',
+                    'Their green tube-shaped eyes can rotate to look straight up!',
+                    'They steal food from jellyfish tentacles without getting stung!'
+                ]
+            },
+            {
+                name: 'Cookiecutter Shark',
+                emoji: '🍪',
+                scientific: 'Isistius brasiliensis',
+                facts: [
+                    'Cookiecutter sharks bite round holes out of bigger animals like a cookie cutter!',
+                    'They glow in the dark to attract prey!',
+                    'They\'re only about 20 inches long but bite whales and submarines!'
+                ]
+            },
+            {
+                name: 'Frilled Shark',
+                emoji: '🧶',
+                scientific: 'Chlamydoselachus anguineus',
+                facts: [
+                    'Frilled sharks look like eels with frilly gills like a collar!',
+                    'They\'ve been around for 80 million years - a living fossil!',
+                    'They can swallow prey half their size whole!'
+                ]
+            },
+            {
+                name: 'Greenland Shark',
+                emoji: '🥶',
+                scientific: 'Somniosus microcephalus',
+                facts: [
+                    'Greenland sharks can live over 400 years - the longest-lived vertebrate!',
+                    'They swim super slowly - about 1 mile per hour!',
+                    'Their meat is toxic and was used to preserve food in Greenland!'
+                ]
+            },
+            {
+                name: 'Megamouth Shark',
+                emoji: '👄',
+                scientific: 'Megachasma pelagios',
+                facts: [
+                    'Megamouth sharks have huge mouths but only eat tiny plankton!',
+                    'They\'re so rare that fewer than 100 have ever been seen!',
+                    'Their mouths can glow to attract prey in the dark!'
+                ]
+            },
+            {
+                name: 'Sawfish',
+                emoji: '🪚',
+                scientific: 'Pristidae',
+                facts: [
+                    'Sawfish have long snouts with teeth on the edges like a saw!',
+                    'They use their saw to dig in sand and stun fish by slashing!',
+                    'Sawfish can grow up to 23 feet long!'
+                ]
+            },
+            {
+                name: 'Paddlefish',
+                emoji: '🏓',
+                scientific: 'Polyodontidae',
+                facts: [
+                    'Paddlefish have long paddle-shaped noses!',
+                    'Their paddle senses tiny electrical signals from their food!',
+                    'Paddlefish have been around for 300 million years!'
+                ]
+            }
+        ];
+
+        // Game state
+        let state = {
+            orcaX: window.innerWidth / 2,
+            orcaY: window.innerHeight / 2,
+            velocityX: 0,
+            velocityY: 0,
+            facing: 'right',
+            discoveredAnimals: new Set(),
+            visibleAnimals: [],
+            worldSize: 4000,
+            keys: {},
+            gameRunning: false
+        };
+
+        // DOM elements
+        const gameContainer = document.getElementById('game-container');
+        const startScreen = document.getElementById('start-screen');
+        const startBtn = document.getElementById('start-btn');
+        const hud = document.getElementById('hud');
+        const discoveredCountEl = document.getElementById('discovered-count');
+        const orca = document.getElementById('orca');
+        const animalInfoScreen = document.getElementById('animal-info-screen');
+        const newBadge = document.getElementById('new-badge');
+        const infoEmoji = document.getElementById('info-emoji');
+        const infoName = document.getElementById('info-name');
+        const infoScientific = document.getElementById('info-scientific');
+        const fact1 = document.getElementById('fact-1');
+        const fact2 = document.getElementById('fact-2');
+        const fact3 = document.getElementById('fact-3');
+        const closeInfoBtn = document.getElementById('close-info');
+        const collectionScreen = document.getElementById('collection-screen');
+        const collectionGrid = document.getElementById('collection-grid');
+        const openCollectionBtn = document.getElementById('open-collection');
+        const closeCollectionBtn = document.getElementById('close-collection');
+        const progressText = document.getElementById('progress-text');
+        const instructions = document.getElementById('instructions');
+        const dismissInstructions = document.getElementById('dismiss-instructions');
+        const helpBtn = document.getElementById('help-btn');
+        const minimap = document.getElementById('minimap');
+        const minimapOrca = document.getElementById('minimap-orca');
+
+        // Create bubbles
+        function createBubbles() {
+            for (let i = 0; i < 20; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                const size = Math.random() * 15 + 5;
+                bubble.style.width = size + 'px';
+                bubble.style.height = size + 'px';
+                bubble.style.left = Math.random() * 100 + '%';
+                bubble.style.bottom = '-30px';
+                bubble.style.animationDuration = (Math.random() * 8 + 6) + 's';
+                bubble.style.animationDelay = (Math.random() * 8) + 's';
+                gameContainer.appendChild(bubble);
+            }
+        }
+
+        // Create kelp
+        function createKelp() {
+            const positions = [3, 8, 88, 95];
+            positions.forEach(pos => {
+                const kelp = document.createElement('div');
+                kelp.className = 'kelp';
+                kelp.style.left = pos + '%';
+
+                for (let i = 0; i < 3; i++) {
+                    const strand = document.createElement('div');
+                    strand.className = 'kelp-strand';
+                    strand.style.left = (i * 6) + 'px';
+                    strand.style.height = (Math.random() * 100 + 80) + 'px';
+                    strand.style.animationDelay = (i * 0.3) + 's';
+                    kelp.appendChild(strand);
+                }
+
+                gameContainer.appendChild(kelp);
+            });
+        }
+
+        // Create coral decorations
+        function createCoral() {
+            const corals = ['🪸', '🪸', '🌿', '🪨'];
+            const positions = [10, 25, 70, 85];
+            positions.forEach((pos, i) => {
+                const coral = document.createElement('div');
+                coral.className = 'coral';
+                coral.textContent = corals[i];
+                coral.style.left = pos + '%';
+                coral.style.fontSize = (Math.random() * 20 + 40) + 'px';
+                gameContainer.appendChild(coral);
+            });
+        }
+
+        // Place animals in the world
+        function placeAnimals() {
+            // Clear existing animals
+            document.querySelectorAll('.animal').forEach(a => a.remove());
+            document.querySelectorAll('.minimap-animal').forEach(a => a.remove());
+            state.visibleAnimals = [];
+
+            // Shuffle and place all animals
+            const shuffled = [...animals].sort(() => Math.random() - 0.5);
+
+            shuffled.forEach((animal, index) => {
+                // Distribute animals across the world
+                const angle = (index / shuffled.length) * Math.PI * 2;
+                const distance = 300 + Math.random() * (state.worldSize / 2 - 400);
+                const x = state.worldSize / 2 + Math.cos(angle) * distance + (Math.random() - 0.5) * 500;
+                const y = state.worldSize / 2 + Math.sin(angle) * distance + (Math.random() - 0.5) * 500;
+
+                const animalData = {
+                    ...animal,
+                    x: x,
+                    y: y,
+                    element: null,
+                    minimapElement: null
+                };
+
+                // Create minimap marker
+                const minimapMarker = document.createElement('div');
+                minimapMarker.className = 'minimap-animal';
+                if (state.discoveredAnimals.has(animal.name)) {
+                    minimapMarker.classList.add('discovered');
+                }
+                minimap.appendChild(minimapMarker);
+                animalData.minimapElement = minimapMarker;
+
+                state.visibleAnimals.push(animalData);
+            });
+        }
+
+        // Update visible animals
+        function updateVisibleAnimals() {
+            const viewWidth = window.innerWidth;
+            const viewHeight = window.innerHeight;
+            const margin = 200;
+
+            state.visibleAnimals.forEach(animal => {
+                const screenX = animal.x - state.orcaX + viewWidth / 2;
+                const screenY = animal.y - state.orcaY + viewHeight / 2;
+
+                // Check if animal is on screen
+                const onScreen = screenX > -margin && screenX < viewWidth + margin &&
+                                 screenY > -margin && screenY < viewHeight + margin;
+
+                if (onScreen && !animal.element) {
+                    // Create animal element
+                    const el = document.createElement('div');
+                    el.className = 'animal swimming';
+                    el.textContent = animal.emoji;
+                    el.style.left = screenX + 'px';
+                    el.style.top = screenY + 'px';
+                    el.style.animationDelay = (Math.random() * 3) + 's';
+                    el.addEventListener('click', () => showAnimalInfo(animal));
+                    gameContainer.appendChild(el);
+                    animal.element = el;
+                } else if (!onScreen && animal.element) {
+                    // Remove offscreen animal
+                    animal.element.remove();
+                    animal.element = null;
+                } else if (onScreen && animal.element) {
+                    // Update position
+                    animal.element.style.left = screenX + 'px';
+                    animal.element.style.top = screenY + 'px';
+                }
+
+                // Update minimap
+                if (animal.minimapElement) {
+                    const minimapX = (animal.x / state.worldSize) * 150;
+                    const minimapY = (animal.y / state.worldSize) * 100;
+                    animal.minimapElement.style.left = minimapX + 'px';
+                    animal.minimapElement.style.top = minimapY + 'px';
+                }
+            });
+
+            // Update minimap orca position
+            const orcaMinimapX = (state.orcaX / state.worldSize) * 150;
+            const orcaMinimapY = (state.orcaY / state.worldSize) * 100;
+            minimapOrca.style.left = orcaMinimapX + 'px';
+            minimapOrca.style.top = orcaMinimapY + 'px';
+        }
+
+        // Show animal info
+        function showAnimalInfo(animal) {
+            state.gameRunning = false;
+
+            const isNew = !state.discoveredAnimals.has(animal.name);
+
+            if (isNew) {
+                state.discoveredAnimals.add(animal.name);
+                discoveredCountEl.textContent = state.discoveredAnimals.size;
+                newBadge.classList.remove('hidden');
+
+                // Update minimap marker
+                if (animal.minimapElement) {
+                    animal.minimapElement.classList.add('discovered');
+                }
+
+                // Animate the animal
+                if (animal.element) {
+                    animal.element.classList.add('discovered');
+                }
+            } else {
+                newBadge.classList.add('hidden');
+            }
+
+            infoEmoji.textContent = animal.emoji;
+            infoName.textContent = animal.name;
+            infoScientific.textContent = animal.scientific;
+            fact1.innerHTML = '<span class="fact-number">1.</span> ' + animal.facts[0];
+            fact2.innerHTML = '<span class="fact-number">2.</span> ' + animal.facts[1];
+            fact3.innerHTML = '<span class="fact-number">3.</span> ' + animal.facts[2];
+
+            animalInfoScreen.classList.remove('hidden');
+
+            // Save progress
+            saveProgress();
+        }
+
+        // Close animal info
+        function closeAnimalInfo() {
+            animalInfoScreen.classList.add('hidden');
+            state.gameRunning = true;
+        }
+
+        // Show collection
+        function showCollection() {
+            state.gameRunning = false;
+
+            progressText.textContent = `You've discovered ${state.discoveredAnimals.size} out of 100 animals!`;
+
+            collectionGrid.innerHTML = '';
+
+            animals.forEach(animal => {
+                const item = document.createElement('div');
+                item.className = 'collection-item';
+
+                const discovered = state.discoveredAnimals.has(animal.name);
+                if (!discovered) {
+                    item.classList.add('undiscovered');
+                }
+
+                item.innerHTML = `
+                    <span class="emoji">${animal.emoji}</span>
+                    <div class="name">${discovered ? animal.name : '???'}</div>
+                `;
+
+                if (discovered) {
+                    item.addEventListener('click', () => {
+                        collectionScreen.classList.add('hidden');
+                        showAnimalInfo(animal);
+                    });
+                }
+
+                collectionGrid.appendChild(item);
+            });
+
+            collectionScreen.classList.remove('hidden');
+        }
+
+        // Close collection
+        function closeCollection() {
+            collectionScreen.classList.add('hidden');
+            state.gameRunning = true;
+        }
+
+        // Save progress to localStorage
+        function saveProgress() {
+            localStorage.setItem('orcaOceanProgress', JSON.stringify([...state.discoveredAnimals]));
+        }
+
+        // Load progress from localStorage
+        function loadProgress() {
+            const saved = localStorage.getItem('orcaOceanProgress');
+            if (saved) {
+                state.discoveredAnimals = new Set(JSON.parse(saved));
+            }
+        }
+
+        // Update orca position
+        function updateOrca() {
+            const acceleration = 0.5;
+            const maxSpeed = 8;
+            const friction = 0.95;
+
+            // Apply acceleration based on keys
+            if (state.keys['ArrowLeft'] || state.keys['KeyA']) {
+                state.velocityX -= acceleration;
+                state.facing = 'left';
+            }
+            if (state.keys['ArrowRight'] || state.keys['KeyD']) {
+                state.velocityX += acceleration;
+                state.facing = 'right';
+            }
+            if (state.keys['ArrowUp'] || state.keys['KeyW']) {
+                state.velocityY -= acceleration;
+            }
+            if (state.keys['ArrowDown'] || state.keys['KeyS']) {
+                state.velocityY += acceleration;
+            }
+
+            // Apply friction
+            state.velocityX *= friction;
+            state.velocityY *= friction;
+
+            // Clamp speed
+            const speed = Math.sqrt(state.velocityX ** 2 + state.velocityY ** 2);
+            if (speed > maxSpeed) {
+                state.velocityX = (state.velocityX / speed) * maxSpeed;
+                state.velocityY = (state.velocityY / speed) * maxSpeed;
+            }
+
+            // Update position
+            state.orcaX += state.velocityX;
+            state.orcaY += state.velocityY;
+
+            // Keep orca in world bounds
+            const margin = 100;
+            state.orcaX = Math.max(margin, Math.min(state.worldSize - margin, state.orcaX));
+            state.orcaY = Math.max(margin, Math.min(state.worldSize - margin, state.orcaY));
+
+            // Update orca visual (stays centered on screen)
+            orca.style.left = (window.innerWidth / 2 - 90) + 'px';
+            orca.style.top = (window.innerHeight / 2 - 50) + 'px';
+
+            // Flip orca based on direction
+            if (state.facing === 'left') {
+                orca.classList.add('flip');
+            } else {
+                orca.classList.remove('flip');
+            }
+        }
+
+        // Game loop
+        function gameLoop() {
+            if (state.gameRunning) {
+                updateOrca();
+                updateVisibleAnimals();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start game
+        function startGame() {
+            loadProgress();
+
+            state.orcaX = state.worldSize / 2;
+            state.orcaY = state.worldSize / 2;
+            state.velocityX = 0;
+            state.velocityY = 0;
+            state.gameRunning = true;
+
+            startScreen.classList.add('hidden');
+            hud.classList.remove('hidden');
+            instructions.classList.remove('hidden');
+            minimap.classList.remove('hidden');
+
+            discoveredCountEl.textContent = state.discoveredAnimals.size;
+
+            placeAnimals();
+            gameLoop();
+        }
+
+        // Hide/show instructions
+        function hideInstructions() {
+            instructions.style.opacity = '0';
+            instructions.style.transition = 'opacity 0.5s';
+            setTimeout(() => {
+                instructions.classList.add('hidden');
+                helpBtn.classList.remove('hidden');
+            }, 500);
+        }
+
+        function showInstructions() {
+            instructions.style.opacity = '1';
+            instructions.classList.remove('hidden');
+            helpBtn.classList.add('hidden');
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startGame);
+        closeInfoBtn.addEventListener('click', closeAnimalInfo);
+        openCollectionBtn.addEventListener('click', showCollection);
+        closeCollectionBtn.addEventListener('click', closeCollection);
+        dismissInstructions.addEventListener('click', hideInstructions);
+        helpBtn.addEventListener('click', showInstructions);
+
+        document.addEventListener('keydown', (e) => {
+            state.keys[e.code] = true;
+
+            // Close dialogs with Escape
+            if (e.code === 'Escape') {
+                if (!animalInfoScreen.classList.contains('hidden')) {
+                    closeAnimalInfo();
+                } else if (!collectionScreen.classList.contains('hidden')) {
+                    closeCollection();
+                }
+            }
+
+            // Open collection with C
+            if (e.code === 'KeyC' && state.gameRunning) {
+                showCollection();
+            }
+
+            // Show instructions with ? or /
+            if ((e.key === '?' || e.key === '/') && state.gameRunning) {
+                if (instructions.classList.contains('hidden')) {
+                    showInstructions();
+                } else {
+                    hideInstructions();
+                }
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            state.keys[e.code] = false;
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            updateVisibleAnimals();
+        });
+
+        // Initialize decorations
+        createBubbles();
+        createKelp();
+        createCoral();
+    </script>
+</body>
+</html>

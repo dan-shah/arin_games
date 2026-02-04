@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Junior Car Mechanic - Fix the Car!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard', cursive;
+            background: linear-gradient(180deg, #87CEEB 0%, #98D8C8 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #2C3E50;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.5);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 10px;
+        }
+
+        .score-item {
+            background: #FFD700;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #2C3E50;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .garage {
+            background: linear-gradient(180deg, #8B7355 0%, #6B5344 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+            min-height: 400px;
+        }
+
+        .garage-floor {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: #4a4a4a;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .car-area {
+            position: relative;
+            height: 320px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 40px;
+        }
+
+        .car {
+            position: relative;
+            width: 500px;
+            height: 200px;
+        }
+
+        /* Car Body */
+        .car-body {
+            position: absolute;
+            bottom: 40px;
+            left: 50px;
+            width: 400px;
+            height: 80px;
+            background: linear-gradient(180deg, #E74C3C 0%, #C0392B 100%);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .car-top {
+            position: absolute;
+            bottom: 120px;
+            left: 120px;
+            width: 220px;
+            height: 70px;
+            background: linear-gradient(180deg, #E74C3C 0%, #C0392B 100%);
+            border-radius: 50px 50px 0 0;
+        }
+
+        .window {
+            position: absolute;
+            bottom: 125px;
+            width: 80px;
+            height: 50px;
+            background: linear-gradient(180deg, #85C1E9 0%, #5DADE2 100%);
+            border-radius: 30px 30px 0 0;
+            border: 4px solid #2C3E50;
+        }
+
+        .window-front {
+            left: 140px;
+        }
+
+        .window-back {
+            left: 240px;
+        }
+
+        /* Wheels */
+        .wheel {
+            position: absolute;
+            bottom: 10px;
+            width: 70px;
+            height: 70px;
+            background: radial-gradient(circle, #2C3E50 60%, #1a1a1a 60%);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.3s, filter 0.3s;
+            z-index: 10;
+        }
+
+        .wheel::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 25px;
+            height: 25px;
+            background: radial-gradient(circle, #BDC3C7 0%, #95A5A6 100%);
+            border-radius: 50%;
+        }
+
+        .wheel-front {
+            left: 80px;
+        }
+
+        .wheel-back {
+            left: 350px;
+        }
+
+        .wheel.flat {
+            transform: scaleY(0.6);
+            filter: brightness(0.7);
+        }
+
+        .wheel:hover:not(.flat) {
+            transform: scale(1.05);
+        }
+
+        /* Headlights - FRONT of car (left side of screen) */
+        .headlight {
+            position: absolute;
+            bottom: 70px;
+            left: 50px;
+            width: 30px;
+            height: 25px;
+            background: #F1C40F;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px #F1C40F;
+        }
+
+        .headlight.broken {
+            background: #7F8C8D;
+            box-shadow: none;
+        }
+
+        /* Tail lights - BACK of car (right side of screen) */
+        .taillight {
+            position: absolute;
+            bottom: 70px;
+            right: 50px;
+            width: 25px;
+            height: 35px;
+            background: #E74C3C;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.8);
+        }
+
+        .taillight.broken {
+            background: #7F8C8D;
+            box-shadow: none;
+        }
+
+        /* Hood - clickable with hint */
+        .hood {
+            position: absolute;
+            bottom: 90px;
+            left: 50px;
+            width: 80px;
+            height: 30px;
+            background: linear-gradient(180deg, #C0392B 0%, #A93226 100%);
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+            transition: transform 0.5s;
+            transform-origin: left bottom;
+            border: 2px solid #922B21;
+            z-index: 20;
+        }
+
+        .hood::before {
+            content: 'HOOD';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.6rem;
+            font-weight: bold;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .hood:hover {
+            filter: brightness(1.2);
+        }
+
+        .hood.open {
+            transform: rotate(-70deg);
+        }
+
+        .hood.open::before {
+            opacity: 0;
+        }
+
+        /* Click hint for hood */
+        .click-hint {
+            position: absolute;
+            bottom: 125px;
+            left: 45px;
+            background: #F1C40F;
+            color: #2C3E50;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            animation: hintBounce 1s infinite;
+            z-index: 25;
+            pointer-events: none;
+        }
+
+        .click-hint::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #F1C40F;
+        }
+
+        @keyframes hintBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        /* Door - clickable */
+        .door {
+            position: absolute;
+            bottom: 45px;
+            left: 160px;
+            width: 90px;
+            height: 70px;
+            background: linear-gradient(180deg, #C0392B 0%, #A93226 100%);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.5s;
+            transform-origin: left center;
+            border: 2px solid #922B21;
+            z-index: 15;
+        }
+
+        .door::before {
+            content: 'DOOR';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .door-handle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 8px;
+            background: #7F8C8D;
+            border-radius: 3px;
+        }
+
+        .door:hover {
+            filter: brightness(1.2);
+        }
+
+        .door.open {
+            transform: rotateY(-50deg);
+        }
+
+        .door.open::before {
+            opacity: 0;
+        }
+
+        /* Door hint */
+        .door-hint {
+            position: absolute;
+            bottom: 120px;
+            left: 180px;
+            background: #3498DB;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            animation: hintBounce 1s infinite;
+            animation-delay: 0.5s;
+            z-index: 25;
+            pointer-events: none;
+        }
+
+        .door-hint::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #3498DB;
+        }
+
+        /* Car interior visible when door open */
+        .car-interior {
+            position: absolute;
+            bottom: 45px;
+            left: 165px;
+            width: 80px;
+            height: 65px;
+            background: #2C3E50;
+            border-radius: 3px;
+            display: none;
+            z-index: 5;
+        }
+
+        .car-interior.visible {
+            display: block;
+        }
+
+        .seat {
+            position: absolute;
+            bottom: 5px;
+            left: 10px;
+            width: 25px;
+            height: 40px;
+            background: #5D6D7E;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .steering-wheel {
+            position: absolute;
+            bottom: 25px;
+            left: 45px;
+            width: 25px;
+            height: 25px;
+            border: 4px solid #7F8C8D;
+            border-radius: 50%;
+        }
+
+        /* Engine compartment - visible when hood open */
+        .engine-compartment {
+            position: absolute;
+            bottom: 45px;
+            left: 55px;
+            width: 70px;
+            height: 45px;
+            background: #1a1a1a;
+            border-radius: 3px;
+            display: none;
+            z-index: 5;
+        }
+
+        .engine-compartment.visible {
+            display: block;
+        }
+
+        /* Engine */
+        .engine {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #5D6D7E 0%, #2C3E50 100%);
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .engine-detail {
+            position: absolute;
+            top: 8px;
+            left: 5px;
+            right: 5px;
+            height: 8px;
+            background: #7F8C8D;
+            border-radius: 3px;
+        }
+
+        .engine-label {
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.5rem;
+            color: white;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .engine.overheating::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(transparent, rgba(255,100,100,0.6));
+            animation: steam 1s infinite;
+            border-radius: 5px;
+        }
+
+        @keyframes steam {
+            0%, 100% { opacity: 0.3; transform: translateY(0); }
+            50% { opacity: 0.8; transform: translateY(-5px); }
+        }
+
+        /* Battery - larger and more visible */
+        .battery {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 25px;
+            height: 30px;
+            background: linear-gradient(180deg, #27AE60 0%, #1E8449 100%);
+            border-radius: 3px;
+            cursor: pointer;
+            z-index: 10;
+            border: 2px solid #145A32;
+        }
+
+        .battery-terminal {
+            position: absolute;
+            top: -6px;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+        }
+
+        .battery-terminal.pos {
+            left: 3px;
+            background: #E74C3C;
+        }
+
+        .battery-terminal.pos::after {
+            content: '+';
+            position: absolute;
+            top: -2px;
+            left: 1px;
+            font-size: 0.5rem;
+            color: white;
+            font-weight: bold;
+        }
+
+        .battery-terminal.neg {
+            right: 3px;
+            background: #2C3E50;
+        }
+
+        .battery-terminal.neg::after {
+            content: '-';
+            position: absolute;
+            top: -2px;
+            left: 2px;
+            font-size: 0.5rem;
+            color: white;
+            font-weight: bold;
+        }
+
+        .battery-label {
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.5rem;
+            color: white;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .battery.dead {
+            background: linear-gradient(180deg, #7F8C8D 0%, #5D6D7E 100%);
+            border-color: #4D5656;
+            animation: deadBlink 1s infinite;
+        }
+
+        @keyframes deadBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Oil indicator */
+        .oil-indicator {
+            position: absolute;
+            bottom: 3px;
+            left: 15px;
+            width: 15px;
+            height: 15px;
+            background: #27AE60;
+            border-radius: 50%;
+            display: none;
+            z-index: 10;
+        }
+
+        .oil-indicator.visible {
+            display: block;
+        }
+
+        .oil-indicator.low {
+            background: #E74C3C;
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Gas Tank */
+        .gas-cap {
+            position: absolute;
+            bottom: 85px;
+            right: 80px;
+            width: 20px;
+            height: 20px;
+            background: #2C3E50;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #1a1a1a;
+        }
+
+        /* Toolbox */
+        .toolbox {
+            background: linear-gradient(180deg, #E74C3C 0%, #C0392B 100%);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .toolbox h2 {
+            color: white;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .tools {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .tool {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            transition: transform 0.2s, box-shadow 0.2s;
+            user-select: none;
+        }
+
+        .tool:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .tool.selected {
+            transform: scale(1.15);
+            box-shadow: 0 0 20px #F1C40F;
+            border: 4px solid #F1C40F;
+        }
+
+        .tool-icon {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+
+        .tool-name {
+            font-size: 0.85rem;
+            color: #2C3E50;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* Problem indicator */
+        .problem-bubble {
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 25px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #E74C3C;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            animation: bounce 1s infinite;
+            z-index: 100;
+            white-space: nowrap;
+        }
+
+        .problem-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 15px solid white;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-10px); }
+        }
+
+        /* Instructions */
+        .instructions {
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .instructions h3 {
+            color: #2C3E50;
+            margin-bottom: 10px;
+        }
+
+        .instructions p {
+            color: #34495E;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        /* Success animation */
+        .success-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, #27AE60, #2ECC71);
+            color: white;
+            padding: 40px 60px;
+            border-radius: 20px;
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .success-popup.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .success-popup .stars {
+            font-size: 3rem;
+            margin-top: 10px;
+        }
+
+        /* Part highlight when hovering with tool */
+        .car-part.highlight {
+            filter: brightness(1.3);
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { filter: brightness(1.3); }
+            50% { filter: brightness(1.5); }
+        }
+
+        /* Info panel */
+        .info-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(44, 62, 80, 0.95);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 300px;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            z-index: 500;
+        }
+
+        .info-panel.show {
+            transform: translateX(0);
+        }
+
+        .info-panel h4 {
+            color: #F1C40F;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .info-panel p {
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Start button */
+        .start-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 20px 50px;
+            font-size: 1.5rem;
+            font-family: inherit;
+            background: linear-gradient(135deg, #27AE60, #2ECC71);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(39, 174, 96, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(39, 174, 96, 0.5);
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            top: -10px;
+            width: 15px;
+            height: 15px;
+            animation: fall linear forwards;
+            z-index: 1001;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+            }
+        }
+
+        /* Hide hints when playing */
+        .playing .click-hint,
+        .playing .door-hint {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>Junior Car Mechanic</h1>
+            <div class="score-board">
+                <div class="score-item">Stars: <span id="stars">0</span></div>
+                <div class="score-item">Cars Fixed: <span id="carsFixed">0</span></div>
+            </div>
+        </div>
+
+        <div class="garage">
+            <div class="car-area">
+                <div class="car" id="car">
+                    <div class="problem-bubble" id="problemBubble" style="display: none;"></div>
+
+                    <!-- Car Body -->
+                    <div class="car-body"></div>
+                    <div class="car-top"></div>
+                    <div class="window window-front"></div>
+                    <div class="window window-back"></div>
+
+                    <!-- Hood with hint -->
+                    <div class="click-hint" id="hoodHint">Click to open!</div>
+                    <div class="hood" id="hood"></div>
+
+                    <!-- Engine compartment (visible when hood open) -->
+                    <div class="engine-compartment" id="engineCompartment">
+                        <div class="engine car-part" id="engine" data-part="engine">
+                            <div class="engine-detail"></div>
+                            <div class="engine-label">ENGINE</div>
+                        </div>
+                        <div class="battery car-part" id="battery" data-part="battery">
+                            <div class="battery-terminal pos"></div>
+                            <div class="battery-terminal neg"></div>
+                            <div class="battery-label">BATTERY</div>
+                        </div>
+                        <div class="oil-indicator car-part" id="oilIndicator" data-part="oil"></div>
+                    </div>
+
+                    <!-- Door with hint -->
+                    <div class="door-hint" id="doorHint">Click to open!</div>
+                    <div class="car-interior" id="carInterior">
+                        <div class="seat"></div>
+                        <div class="steering-wheel"></div>
+                    </div>
+                    <div class="door" id="door">
+                        <div class="door-handle"></div>
+                    </div>
+
+                    <!-- Wheels -->
+                    <div class="wheel wheel-front car-part" id="wheelFront" data-part="wheel"></div>
+                    <div class="wheel wheel-back car-part" id="wheelBack" data-part="wheel"></div>
+
+                    <!-- Headlight - FRONT of car (left side) -->
+                    <div class="headlight car-part" id="headlight" data-part="headlight"></div>
+
+                    <!-- Taillight - BACK of car (right side) -->
+                    <div class="taillight car-part" id="taillight" data-part="taillight"></div>
+
+                    <!-- Gas Cap -->
+                    <div class="gas-cap car-part" id="gasCap" data-part="gas"></div>
+                </div>
+            </div>
+            <div class="garage-floor"></div>
+        </div>
+
+        <div class="toolbox">
+            <h2>Your Toolbox - Click a tool, then click the broken part!</h2>
+            <div class="tools">
+                <div class="tool" data-tool="tire" onclick="selectTool('tire')">
+                    <div class="tool-icon">&#x1F6DE;</div>
+                    <div class="tool-name">Spare Tire</div>
+                </div>
+                <div class="tool" data-tool="wrench" onclick="selectTool('wrench')">
+                    <div class="tool-icon">&#x1F527;</div>
+                    <div class="tool-name">Wrench</div>
+                </div>
+                <div class="tool" data-tool="battery" onclick="selectTool('battery')">
+                    <div class="tool-icon">&#x1F50B;</div>
+                    <div class="tool-name">New Battery</div>
+                </div>
+                <div class="tool" data-tool="gas" onclick="selectTool('gas')">
+                    <div class="tool-icon">&#x26FD;</div>
+                    <div class="tool-name">Gas Can</div>
+                </div>
+                <div class="tool" data-tool="oil" onclick="selectTool('oil')">
+                    <div class="tool-icon">&#x1F6E2;</div>
+                    <div class="tool-name">Oil</div>
+                </div>
+                <div class="tool" data-tool="lightbulb" onclick="selectTool('lightbulb')">
+                    <div class="tool-icon">&#x1F4A1;</div>
+                    <div class="tool-name">Light Bulb</div>
+                </div>
+                <div class="tool" data-tool="coolant" onclick="selectTool('coolant')">
+                    <div class="tool-icon">&#x1F9CA;</div>
+                    <div class="tool-name">Coolant</div>
+                </div>
+            </div>
+        </div>
+
+        <button class="start-btn" id="startBtn" onclick="startNewProblem()">Fix a Car!</button>
+
+        <div class="instructions">
+            <h3>How to Play</h3>
+            <p>
+                Oh no! Cars come to your garage with problems!
+                Click the HOOD or DOOR to open them and see inside.
+                Look at the car to find what's broken, pick the right tool from your toolbox,
+                then click the broken part to fix it. Learn about cars while you help!
+            </p>
+        </div>
+    </div>
+
+    <div class="success-popup" id="successPopup">
+        Great Job!
+        <div class="stars" id="successStars"></div>
+    </div>
+
+    <div class="info-panel" id="infoPanel">
+        <h4 id="infoTitle">Car Part</h4>
+        <p id="infoText">Information about the part</p>
+    </div>
+
+    <script>
+        // Game state
+        let selectedTool = null;
+        let currentProblem = null;
+        let stars = 0;
+        let carsFixed = 0;
+        let attempts = 0;
+
+        // Car part info
+        const partInfo = {
+            wheel: {
+                title: "Wheels & Tires",
+                text: "Wheels help the car roll smoothly! Tires are made of rubber and filled with air. When a tire goes flat, the car can't drive well. Mechanics use a jack to lift the car and put on a spare tire!"
+            },
+            battery: {
+                title: "Car Battery",
+                text: "The battery is in the engine compartment (open the hood to see it!). It gives the car electricity to start! The red terminal is + (positive) and black is - (negative). When dead, we replace it!"
+            },
+            engine: {
+                title: "Engine",
+                text: "The engine is under the hood - it's like the car's heart! It uses gasoline to make power that moves the wheels. Engines get very hot, so they need coolant to stay cool!"
+            },
+            headlight: {
+                title: "Headlights",
+                text: "Headlights are at the FRONT of the car (where the hood is). They help you see the road ahead at night! They shine bright yellow-white light forward."
+            },
+            taillight: {
+                title: "Tail Lights",
+                text: "Tail lights are at the BACK of the car. They're RED so cars behind you can see you! They light up when you brake to warn other drivers you're slowing down."
+            },
+            gas: {
+                title: "Gas Tank",
+                text: "The gas tank holds fuel for the engine! Cars need gasoline to run, just like you need food for energy. The gas cap is on the side of the car."
+            },
+            oil: {
+                title: "Engine Oil",
+                text: "Oil keeps the engine running smoothly! It's under the hood with the engine. The oil light turns red when oil is low - that means add more oil!"
+            }
+        };
+
+        // Problems that can occur
+        const problems = [
+            {
+                id: 'flatFront',
+                type: 'wheel',
+                element: 'wheelFront',
+                message: "Oh no! The front tire is flat!",
+                tool: 'tire',
+                fix: () => {
+                    document.getElementById('wheelFront').classList.remove('flat');
+                }
+            },
+            {
+                id: 'flatBack',
+                type: 'wheel',
+                element: 'wheelBack',
+                message: "Oh no! The back tire is flat!",
+                tool: 'tire',
+                fix: () => {
+                    document.getElementById('wheelBack').classList.remove('flat');
+                }
+            },
+            {
+                id: 'deadBattery',
+                type: 'battery',
+                element: 'battery',
+                message: "The battery is dead! Open the hood to find it!",
+                tool: 'battery',
+                needsHood: true,
+                fix: () => {
+                    document.getElementById('battery').classList.remove('dead');
+                }
+            },
+            {
+                id: 'headlightBroken',
+                type: 'headlight',
+                element: 'headlight',
+                message: "The headlight at the FRONT is broken!",
+                tool: 'lightbulb',
+                fix: () => {
+                    document.getElementById('headlight').classList.remove('broken');
+                }
+            },
+            {
+                id: 'taillightBroken',
+                type: 'taillight',
+                element: 'taillight',
+                message: "The tail light at the BACK is broken!",
+                tool: 'lightbulb',
+                fix: () => {
+                    document.getElementById('taillight').classList.remove('broken');
+                }
+            },
+            {
+                id: 'noGas',
+                type: 'gas',
+                element: 'gasCap',
+                message: "The car is out of gas!",
+                tool: 'gas',
+                fix: () => {
+                    // Visual feedback handled in fixPart
+                }
+            },
+            {
+                id: 'lowOil',
+                type: 'oil',
+                element: 'oilIndicator',
+                message: "The engine needs oil! Open the hood!",
+                tool: 'oil',
+                needsHood: true,
+                fix: () => {
+                    document.getElementById('oilIndicator').classList.remove('low');
+                }
+            },
+            {
+                id: 'overheating',
+                type: 'engine',
+                element: 'engine',
+                message: "The engine is too hot! Open the hood!",
+                tool: 'coolant',
+                needsHood: true,
+                fix: () => {
+                    document.getElementById('engine').classList.remove('overheating');
+                }
+            }
+        ];
+
+        // Select a tool
+        function selectTool(tool) {
+            // Remove previous selection
+            document.querySelectorAll('.tool').forEach(t => t.classList.remove('selected'));
+
+            // Select new tool
+            selectedTool = tool;
+            document.querySelector(`[data-tool="${tool}"]`).classList.add('selected');
+        }
+
+        // Show part info
+        function showInfo(partType) {
+            const info = partInfo[partType];
+            if (info) {
+                document.getElementById('infoTitle').textContent = info.title;
+                document.getElementById('infoText').textContent = info.text;
+                document.getElementById('infoPanel').classList.add('show');
+            }
+        }
+
+        function hideInfo() {
+            document.getElementById('infoPanel').classList.remove('show');
+        }
+
+        // Start a new problem
+        function startNewProblem() {
+            // Reset car state
+            resetCar();
+
+            // Pick random problem
+            currentProblem = problems[Math.floor(Math.random() * problems.length)];
+            attempts = 0;
+
+            // Apply the problem
+            applyProblem(currentProblem);
+
+            // Show problem bubble
+            document.getElementById('problemBubble').textContent = currentProblem.message;
+            document.getElementById('problemBubble').style.display = 'block';
+
+            // Show info about the part
+            showInfo(currentProblem.type);
+
+            // Update button
+            document.getElementById('startBtn').textContent = 'New Car';
+
+            // Mark as playing (hides hints)
+            document.getElementById('car').classList.add('playing');
+        }
+
+        // Reset car to normal state
+        function resetCar() {
+            document.getElementById('wheelFront').classList.remove('flat');
+            document.getElementById('wheelBack').classList.remove('flat');
+            document.getElementById('battery').classList.remove('dead');
+            document.getElementById('engine').classList.remove('overheating');
+            document.getElementById('oilIndicator').classList.remove('low');
+            document.getElementById('headlight').classList.remove('broken');
+            document.getElementById('taillight').classList.remove('broken');
+            document.getElementById('hood').classList.remove('open');
+            document.getElementById('door').classList.remove('open');
+            document.getElementById('engineCompartment').classList.remove('visible');
+            document.getElementById('carInterior').classList.remove('visible');
+            document.getElementById('oilIndicator').classList.remove('visible');
+            document.getElementById('problemBubble').style.display = 'none';
+            hideInfo();
+            selectedTool = null;
+            document.querySelectorAll('.tool').forEach(t => t.classList.remove('selected'));
+        }
+
+        // Apply a problem to the car
+        function applyProblem(problem) {
+            switch(problem.id) {
+                case 'flatFront':
+                    document.getElementById('wheelFront').classList.add('flat');
+                    break;
+                case 'flatBack':
+                    document.getElementById('wheelBack').classList.add('flat');
+                    break;
+                case 'deadBattery':
+                    document.getElementById('battery').classList.add('dead');
+                    break;
+                case 'headlightBroken':
+                    document.getElementById('headlight').classList.add('broken');
+                    break;
+                case 'taillightBroken':
+                    document.getElementById('taillight').classList.add('broken');
+                    break;
+                case 'lowOil':
+                    document.getElementById('oilIndicator').classList.add('low');
+                    break;
+                case 'overheating':
+                    document.getElementById('engine').classList.add('overheating');
+                    break;
+            }
+        }
+
+        // Handle clicking on hood
+        document.getElementById('hood').addEventListener('click', function() {
+            this.classList.toggle('open');
+            const isOpen = this.classList.contains('open');
+            document.getElementById('engineCompartment').classList.toggle('visible', isOpen);
+            document.getElementById('oilIndicator').classList.toggle('visible', isOpen);
+        });
+
+        // Handle clicking on door
+        document.getElementById('door').addEventListener('click', function() {
+            this.classList.toggle('open');
+            const isOpen = this.classList.contains('open');
+            document.getElementById('carInterior').classList.toggle('visible', isOpen);
+        });
+
+        // Handle clicking on car parts
+        document.querySelectorAll('.car-part').forEach(part => {
+            part.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (!currentProblem) return;
+
+                const partType = this.dataset.part;
+
+                // Check if this is the broken part and right tool
+                if (this.id === currentProblem.element) {
+                    if (selectedTool === currentProblem.tool) {
+                        fixPart();
+                    } else if (selectedTool) {
+                        // Wrong tool
+                        attempts++;
+                        shakePart(this);
+                        showHint("Try a different tool!");
+                    } else {
+                        showHint("Pick a tool first!");
+                    }
+                }
+            });
+
+            // Show info on hover
+            part.addEventListener('mouseenter', function() {
+                const partType = this.dataset.part;
+                if (partType) {
+                    showInfo(partType);
+                }
+            });
+        });
+
+        // Fix the part
+        function fixPart() {
+            currentProblem.fix();
+
+            // Calculate stars based on attempts
+            let earnedStars = 3;
+            if (attempts === 1) earnedStars = 2;
+            if (attempts >= 2) earnedStars = 1;
+
+            stars += earnedStars;
+            carsFixed++;
+
+            // Update display
+            document.getElementById('stars').textContent = stars;
+            document.getElementById('carsFixed').textContent = carsFixed;
+
+            // Show success
+            showSuccess(earnedStars);
+
+            // Hide problem bubble
+            document.getElementById('problemBubble').style.display = 'none';
+
+            // Clear current problem
+            currentProblem = null;
+            selectedTool = null;
+            document.querySelectorAll('.tool').forEach(t => t.classList.remove('selected'));
+        }
+
+        // Shake animation for wrong answer
+        function shakePart(element) {
+            element.style.animation = 'none';
+            element.offsetHeight; // Trigger reflow
+            element.style.animation = 'shake 0.5s';
+        }
+
+        // Add shake keyframes
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-10px); }
+                75% { transform: translateX(10px); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Show hint
+        function showHint(message) {
+            const bubble = document.getElementById('problemBubble');
+            const originalMessage = bubble.textContent;
+            bubble.textContent = message;
+            bubble.style.background = '#F1C40F';
+
+            setTimeout(() => {
+                bubble.textContent = originalMessage;
+                bubble.style.background = 'white';
+            }, 1500);
+        }
+
+        // Show success popup
+        function showSuccess(earnedStars) {
+            const popup = document.getElementById('successPopup');
+            const starsDiv = document.getElementById('successStars');
+
+            starsDiv.textContent = '\u2B50'.repeat(earnedStars);
+            popup.classList.add('show');
+
+            // Create confetti
+            createConfetti();
+
+            setTimeout(() => {
+                popup.classList.remove('show');
+            }, 2000);
+        }
+
+        // Create confetti effect
+        function createConfetti() {
+            const colors = ['#E74C3C', '#F1C40F', '#27AE60', '#3498DB', '#9B59B6'];
+
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    document.body.appendChild(confetti);
+
+                    setTimeout(() => confetti.remove(), 4000);
+                }, i * 30);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close info panel when clicking elsewhere
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.car-part') && !e.target.closest('.info-panel')) {
+                    hideInfo();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
