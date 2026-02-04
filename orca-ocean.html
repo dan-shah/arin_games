@@ -1960,8 +1960,8 @@
             orca.style.left = (window.innerWidth / 2 - 90) + 'px';
             orca.style.top = (window.innerHeight / 2 - 50) + 'px';
 
-            // Flip orca based on direction
-            if (state.facing === 'left') {
+            // Flip orca based on direction (SVG faces left by default)
+            if (state.facing === 'right') {
                 orca.classList.add('flip');
             } else {
                 orca.classList.remove('flip');
