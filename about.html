@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About - Arin's Games</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      color: #ccc;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-size: 22px;
+      z-index: 100;
+      transition: background 0.2s;
+    }
+
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .container {
+      max-width: 720px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 42px;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 10px;
+      text-shadow: 0 0 20px rgba(100, 200, 255, 0.5);
+    }
+
+    .subtitle {
+      color: #888;
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 50px;
+    }
+
+    .story-section {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 36px;
+      margin-bottom: 30px;
+      border: 2px solid rgba(255, 255, 255, 0.08);
+      line-height: 1.8;
+      font-size: 17px;
+    }
+
+    .story-section h2 {
+      color: #fff;
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+
+    .story-section p {
+      margin-bottom: 16px;
+    }
+
+    .story-section p:last-child {
+      margin-bottom: 0;
+    }
+
+    .highlight {
+      color: #64c8ff;
+    }
+
+    .games-section {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 36px;
+      margin-bottom: 30px;
+      border: 2px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .games-section h2 {
+      color: #fff;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    .category {
+      margin-bottom: 24px;
+    }
+
+    .category:last-child {
+      margin-bottom: 0;
+    }
+
+    .category h3 {
+      color: #64c8ff;
+      font-size: 16px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .game-item {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    .game-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .game-emoji {
+      font-size: 28px;
+      flex-shrink: 0;
+      width: 36px;
+      text-align: center;
+    }
+
+    .game-info {
+      flex: 1;
+    }
+
+    .game-name {
+      color: #fff;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .game-desc {
+      color: #999;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-top: 2px;
+    }
+
+    .built-with {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 36px;
+      margin-bottom: 30px;
+      border: 2px solid rgba(255, 255, 255, 0.08);
+      text-align: center;
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .built-with h2 {
+      color: #fff;
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+
+    .built-with a {
+      color: #64c8ff;
+      text-decoration: none;
+    }
+
+    .built-with a:hover {
+      text-decoration: underline;
+    }
+
+    footer {
+      margin-top: 30px;
+      color: #666;
+      font-size: 14px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <a class="back-btn" href="index.html">&larr;</a>
+
+  <div class="container">
+    <h1>About Arin's Games</h1>
+    <p class="subtitle">How a snow day turned into a game studio</p>
+
+    <div class="story-section">
+      <h2>The Story</h2>
+      <p>Arin is 6 years old and in Kindergarten. In January 2025, he was home from school because of snow and cold. He was bored, wandering around the house with nothing to do.</p>
+      <p>His dad asked him, <span class="highlight">"What's 9 + 6?"</span></p>
+      <p>Arin said he didn't like math.</p>
+      <p>That's when the idea hit. What if math wasn't a worksheet — what if it was a game? Using <span class="highlight">Claude Code</span>, the first game was built right then and there to make math engaging and fun. Arin had a blast playing it.</p>
+      <p>That sparked a journey of building games around everything Arin was learning at school — math, sight words, spelling, patterns, and even Japanese. Along the way, the games incorporated all of his favorite things: <span class="highlight">orcas</span>, <span class="highlight">axolotls</span>, robots, and outer space.</p>
+      <p>Every game here was built by a dad and an AI, for a kid who just needed a reason to care.</p>
+    </div>
+
+    <div class="games-section">
+      <h2>The Games</h2>
+
+      <div class="category">
+        <h3>Math & Logic</h3>
+        <div class="game-item">
+          <span class="game-emoji">🚀</span>
+          <div class="game-info">
+            <div class="game-name">Space Shapes</div>
+            <div class="game-desc">Count floating shapes before time runs out across 10 rounds of increasing difficulty. Build combos for bonus points!</div>
+          </div>
+        </div>
+        <div class="game-item">
+          <span class="game-emoji">🏰</span>
+          <div class="game-info">
+            <div class="game-name">Math Defender</div>
+            <div class="game-desc">Solve math problems to power turrets and defend your base from invaders. Survive 15 waves to win!</div>
+          </div>
+        </div>
+        <div class="game-item">
+          <span class="game-emoji">🪐</span>
+          <div class="game-info">
+            <div class="game-name">Pattern Planet</div>
+            <div class="game-desc">Help aliens decode their messages by completing number, color, shape, and emoji patterns across 5 different planets.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="category">
+        <h3>Reading & Language</h3>
+        <div class="game-item">
+          <span class="game-emoji">✈️</span>
+          <div class="game-info">
+            <div class="game-name">Letter Landing</div>
+            <div class="game-desc">Guide a plane to land on the correct letter. Practice letter recognition with fun flying gameplay.</div>
+          </div>
+        </div>
+        <div class="game-item">
+          <span class="game-emoji">🧁</span>
+          <div class="game-info">
+            <div class="game-name">Word Builder Bakery</div>
+            <div class="game-desc">Spell words to serve treats to bakery customers. Click letter cookies to build words, leveling up from 3 to 5-letter words.</div>
+          </div>
+        </div>
+        <div class="game-item">
+          <span class="game-emoji">🥷</span>
+          <div class="game-info">
+            <div class="game-name">Sight Word Ninja</div>
+            <div class="game-desc">Train as a word ninja — listen to a word, then slash the matching bubble before it escapes. Master 100 sight words across 5 levels.</div>
+          </div>
+        </div>
+        <div class="game-item">
+          <span class="game-emoji">🚂</span>
+          <div class="game-info">
+            <div class="game-name">Rhyme Time Train</div>
+            <div class="game-desc">Build the longest rhyme train! Animals need rhyming buddies to board. Pick the word that rhymes to help them hop on.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="category">
+        <h3>Science & Exploration</h3>
+        <div class="game-item">
+          <span class="game-emoji">🐋</span>
+          <div class="game-info">
+            <div class="game-name">Orca Ocean Adventure</div>
+            <div class="game-desc">Swim as an orca through the ocean and discover 100 amazing sea creatures. Learn 3 fun facts about each animal you find.</div>
+          </div>
+        </div>
+        <div class="game-item">
+          <span class="game-emoji">🦎</span>
+          <div class="game-info">
+            <div class="game-name">Axolotl Japanese</div>
+            <div class="game-desc">Help a cute pink axolotl swim through the ocean while learning Japanese colors and numbers, with fun facts after each level.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="category">
+        <h3>STEM & Problem Solving</h3>
+        <div class="game-item">
+          <span class="game-emoji">🚗</span>
+          <div class="game-info">
+            <div class="game-name">Junior Car Mechanic</div>
+            <div class="game-desc">Fix cars in your garage! Learn about tires, batteries, engines, and more. Pick the right tool and repair broken parts.</div>
+          </div>
+        </div>
+        <div class="game-item">
+          <span class="game-emoji">🤖</span>
+          <div class="game-info">
+            <div class="game-name">Robot Chef</div>
+            <div class="game-desc">Program a robot to cook recipes by clicking command blocks to build a program. Learn sequencing and debugging!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="built-with">
+      <h2>Built With</h2>
+      <p>No frameworks. No build step. Each game is a single HTML file with vanilla JavaScript and CSS.</p>
+      <p>Every game was built entirely with <a href="https://claude.ai/code" target="_blank">Claude Code</a> and hosted on GitHub Pages.</p>
+      <p>Source code: <a href="https://github.com/dan-shah/arin_games" target="_blank">github.com/dan-shah/arin_games</a></p>
+    </div>
+
+    <footer>Made with love for Arin</footer>
+  </div>
+</body>
+</html>
