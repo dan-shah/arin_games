@@ -2,17 +2,17 @@
 
 **Play now: [https://dan-shah.github.io/arin_games/](https://dan-shah.github.io/arin_games/)**
 
-A collection of educational games built for a 6-year-old Kindergartner who decided he didn't like math.
+A collection of educational (and fun!) games built for a 6-year-old Kindergartner. 
 
 ## The Story
 
-In January 2025, Arin was home from school because of snow and cold. He was bored, walking around the house with nothing to do. His dad asked him, "What's 9 + 6?" and Arin said he didn't like math.
+In January 2025, Arin was home from school because of snow and cold. He was bored, walking around the house with nothing to do. His dad (me) asked him, "What's 9 + 6?" and Arin said he didn't like math.
 
-That's when the idea hit — what if math was a game? Using [Claude Code](https://claude.ai/code), the first game was built on the spot to make math engaging and fun. Arin had a blast.
+Sounded like a challenge! Using [Claude Code](https://claude.ai/code), the first game was built on the spot to make math engaging, personalized and fun. Arin had a blast.
 
-That sparked a journey of building games around everything Arin was learning at school — math, sight words, spelling, patterns, and even Japanese. Along the way, the games incorporated his favorite things: orcas, axolotls, robots, and outer space.
+That sparked a journey of building games around stuff Arin was learning at school — math, sight words, spelling, patterns, and even Japanese. Along the way, the games incorporated his favorite things: orcas, axolotls, robots, and outer space.
 
-Every game here was built by a dad and an AI, for a kid who just needed a reason to care.
+Every game here was built by a dad + AI, tweaked by his son. Hope it inspires!
 
 ## The Games
 
