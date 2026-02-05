@@ -6,7 +6,7 @@ A collection of educational (and fun!) games built for a 6-year-old Kindergartne
 
 ## The Story
 
-In January 2025, Arin was home from school because of snow and cold. He was bored, walking around the house with nothing to do. His dad (me) asked him, "What's 9 + 6?" and Arin said he didn't like math.
+In January 2026, Arin was home from school because of snow and cold. He was bored, walking around the house with nothing to do. His dad (me) asked him, "What's 9 + 6?" and Arin said he didn't like math.
 
 Sounded like a challenge! Using [Claude Code](https://claude.ai/code), the first game was built on the spot to make math engaging, personalized and fun. Arin had a blast.
 
