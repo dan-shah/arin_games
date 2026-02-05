@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhyme Time Train</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 60%, #228B22 60%, #228B22 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 20px;
+            z-index: 9999;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: rgba(0,0,0,0.8);
+            border-color: rgba(255,255,255,0.6);
+            transform: scale(1.1);
+        }
+
+        /* Clouds */
+        .cloud {
+            position: fixed;
+            background: white;
+            border-radius: 50px;
+            opacity: 0.9;
+            animation: floatCloud 20s linear infinite;
+        }
+
+        .cloud::before, .cloud::after {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+        }
+
+        @keyframes floatCloud {
+            from { transform: translateX(100vw); }
+            to { transform: translateX(-200px); }
+        }
+
+        /* Start Screen */
+        .start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 60%, #228B22 60%, #228B22 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .start-screen.hidden {
+            display: none;
+        }
+
+        .title {
+            font-size: 3.5rem;
+            color: #8B4513;
+            text-shadow: 3px 3px 0 #FFD700, -1px -1px 0 #fff;
+            margin-bottom: 20px;
+        }
+
+        .train-logo {
+            font-size: 6rem;
+            margin-bottom: 30px;
+            animation: trainBounce 1s ease-in-out infinite;
+        }
+
+        @keyframes trainBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 25px 35px;
+            border-radius: 20px;
+            font-size: 1.3rem;
+            color: #333;
+            text-align: center;
+            max-width: 500px;
+            margin-bottom: 30px;
+            border: 4px solid #8B4513;
+        }
+
+        .instructions span {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .start-btn {
+            padding: 20px 60px;
+            font-size: 2rem;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #922b21, 0 15px 30px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 11px 0 #922b21, 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .start-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 5px 0 #922b21, 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        /* HUD */
+        .hud {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .hud-item {
+            background: rgba(139, 69, 19, 0.9);
+            padding: 10px 20px;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.2rem;
+            border: 3px solid #FFD700;
+        }
+
+        .hud-item span {
+            color: #FFD700;
+            font-weight: bold;
+        }
+
+        /* Game Area */
+        .game-area {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Train Track */
+        .track {
+            position: fixed;
+            bottom: 80px;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            background: repeating-linear-gradient(
+                90deg,
+                #8B4513 0px,
+                #8B4513 40px,
+                #5D3A1A 40px,
+                #5D3A1A 50px
+            );
+        }
+
+        .track::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: #666;
+        }
+
+        .track::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: #666;
+        }
+
+        /* Train */
+        .train-container {
+            position: fixed;
+            bottom: 100px;
+            left: 50px;
+            display: flex;
+            align-items: flex-end;
+            transition: transform 0.5s ease-out;
+        }
+
+        .engine {
+            width: 120px;
+            height: 100px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border-radius: 10px 30px 5px 5px;
+            position: relative;
+            border: 4px solid #922b21;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+        }
+
+        .engine::before {
+            content: '';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            background: #333;
+            border-radius: 5px;
+        }
+
+        .engine::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 10px;
+            width: 25px;
+            height: 25px;
+            background: #333;
+            border-radius: 50%;
+            box-shadow: 70px 0 0 #333;
+        }
+
+        .train-car {
+            width: 90px;
+            height: 70px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border-radius: 10px;
+            margin-left: -5px;
+            position: relative;
+            border: 3px solid #1a5276;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            animation: carBounce 0.3s ease-in-out;
+        }
+
+        .train-car::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 10px;
+            width: 20px;
+            height: 20px;
+            background: #333;
+            border-radius: 50%;
+            box-shadow: 45px 0 0 #333;
+        }
+
+        @keyframes carBounce {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Question Area */
+        .question-area {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .passenger {
+            background: white;
+            padding: 20px 40px;
+            border-radius: 20px;
+            border: 5px solid #e74c3c;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .passenger-emoji {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .passenger-word {
+            font-size: 2rem;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .rhyme-prompt {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 1.4rem;
+            color: #333;
+            border: 3px solid #FFD700;
+        }
+
+        .rhyme-prompt span {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        /* Word Choices */
+        .choices {
+            position: fixed;
+            bottom: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 90%;
+        }
+
+        .choice-card {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 20px;
+            border: 4px solid #8B4513;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            min-width: 120px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .choice-card:hover {
+            transform: translateY(-8px) scale(1.05);
+            border-color: #FFD700;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .choice-card.correct {
+            background: #2ecc71;
+            border-color: #27ae60;
+            animation: correctPulse 0.5s ease-out;
+        }
+
+        .choice-card.wrong {
+            background: #e74c3c;
+            border-color: #c0392b;
+            animation: wrongShake 0.5s ease-out;
+        }
+
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-10px); }
+            80% { transform: translateX(10px); }
+        }
+
+        .choice-emoji {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .choice-word {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Level Complete */
+        .level-complete {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+        }
+
+        .level-complete.hidden {
+            display: none;
+        }
+
+        .level-complete h2 {
+            font-size: 3rem;
+            color: #FFD700;
+            margin-bottom: 20px;
+        }
+
+        .level-complete p {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .train-display {
+            font-size: 3rem;
+            margin: 20px 0;
+            background: rgba(255,255,255,0.1);
+            padding: 20px 40px;
+            border-radius: 20px;
+        }
+
+        .next-btn {
+            margin-top: 30px;
+            padding: 15px 50px;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .next-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(39, 174, 96, 0.4);
+        }
+
+        /* Speak button */
+        .speak-btn {
+            background: #9b59b6;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            margin-left: 15px;
+            vertical-align: middle;
+            transition: all 0.2s;
+        }
+
+        .speak-btn:hover {
+            transform: scale(1.1);
+            background: #8e44ad;
+        }
+
+        /* Streak display */
+        .streak {
+            position: fixed;
+            top: 60px;
+            right: 10px;
+            background: rgba(231, 76, 60, 0.9);
+            padding: 8px 16px;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            border: 2px solid #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-btn" title="Back to Games">🏠</a>
+
+    <!-- Start Screen -->
+    <div class="start-screen" id="startScreen">
+        <h1 class="title">Rhyme Time Train</h1>
+        <div class="train-logo">🚂</div>
+        <div class="instructions">
+            Animals need a <span>rhyming buddy</span> to ride the train!<br><br>
+            Pick the word that <span>rhymes</span> to help them board!<br><br>
+            Build the longest rhyme train you can!
+        </div>
+        <button class="start-btn" onclick="startGame()">All Aboard! 🚃</button>
+    </div>
+
+    <!-- Game Area -->
+    <div class="game-area" id="gameArea">
+        <!-- HUD -->
+        <div class="hud">
+            <div class="hud-item">Train: <span id="trainLength">0</span> cars</div>
+            <div class="hud-item">Score: <span id="score">0</span></div>
+        </div>
+        <div class="streak" id="streak">Streak: 0</div>
+
+        <!-- Track -->
+        <div class="track"></div>
+
+        <!-- Train -->
+        <div class="train-container" id="trainContainer">
+            <div class="engine">🚂</div>
+        </div>
+
+        <!-- Question Area -->
+        <div class="question-area" id="questionArea">
+            <div class="passenger">
+                <span class="passenger-emoji" id="passengerEmoji">🐱</span>
+                <span class="passenger-word" id="passengerWord">CAT</span>
+                <button class="speak-btn" onclick="speakWord(currentRhyme.word)">🔊</button>
+            </div>
+            <div class="rhyme-prompt">
+                Find a word that rhymes with <span id="rhymeWith">CAT</span>!
+            </div>
+        </div>
+
+        <!-- Choices -->
+        <div class="choices" id="choices"></div>
+    </div>
+
+    <!-- Level Complete -->
+    <div class="level-complete hidden" id="levelComplete">
+        <h2>🎉 Amazing Train!</h2>
+        <p>Your rhyme train has <span id="finalLength">0</span> cars!</p>
+        <div class="train-display" id="trainDisplay"></div>
+        <p>Score: <span id="finalScore">0</span></p>
+        <button class="next-btn" onclick="playAgain()">Build New Train!</button>
+    </div>
+
+    <script>
+        // Rhyme sets - each has a base word and rhyming words plus distractors
+        const rhymeSets = [
+            { word: 'CAT', emoji: '🐱', rhymes: ['HAT', 'BAT', 'MAT', 'RAT', 'SAT'], distractors: ['DOG', 'CUP', 'SUN'] },
+            { word: 'DOG', emoji: '🐕', rhymes: ['LOG', 'FOG', 'HOG', 'JOG', 'FROG'], distractors: ['CAT', 'BEE', 'PIE'] },
+            { word: 'BEE', emoji: '🐝', rhymes: ['TREE', 'KEY', 'SEE', 'FREE', 'THREE'], distractors: ['BUG', 'HAT', 'PIG'] },
+            { word: 'PIG', emoji: '🐷', rhymes: ['WIG', 'BIG', 'DIG', 'FIG', 'JIG'], distractors: ['COW', 'HEN', 'BAT'] },
+            { word: 'HEN', emoji: '🐔', rhymes: ['PEN', 'TEN', 'MEN', 'DEN', 'WHEN'], distractors: ['EGG', 'DOG', 'SUN'] },
+            { word: 'BUG', emoji: '🐛', rhymes: ['HUG', 'MUG', 'RUG', 'TUG', 'SLUG'], distractors: ['ANT', 'BEE', 'HAT'] },
+            { word: 'FOX', emoji: '🦊', rhymes: ['BOX', 'SOX', 'ROCKS', 'LOCKS', 'BLOCKS'], distractors: ['DOG', 'CAT', 'PIG'] },
+            { word: 'DUCK', emoji: '🦆', rhymes: ['TRUCK', 'LUCK', 'STUCK', 'PLUCK', 'CHUCK'], distractors: ['BIRD', 'FISH', 'COW'] },
+            { word: 'FISH', emoji: '🐟', rhymes: ['DISH', 'WISH', 'SWISH'], distractors: ['BIRD', 'FROG', 'CRAB'] },
+            { word: 'BEAR', emoji: '🐻', rhymes: ['HAIR', 'CHAIR', 'FAIR', 'STAIR', 'CARE'], distractors: ['WOLF', 'DEER', 'BIRD'] },
+            { word: 'MOUSE', emoji: '🐭', rhymes: ['HOUSE', 'BLOUSE'], distractors: ['RAT', 'CAT', 'CHEESE'] },
+            { word: 'FROG', emoji: '🐸', rhymes: ['LOG', 'DOG', 'HOG', 'JOG', 'FOG'], distractors: ['TOAD', 'FISH', 'BUG'] },
+            { word: 'CAKE', emoji: '🎂', rhymes: ['BAKE', 'LAKE', 'MAKE', 'WAKE', 'SHAKE'], distractors: ['PIE', 'BREAD', 'FOOD'] },
+            { word: 'STAR', emoji: '⭐', rhymes: ['CAR', 'JAR', 'FAR', 'BAR'], distractors: ['MOON', 'SUN', 'SKY'] },
+            { word: 'MOON', emoji: '🌙', rhymes: ['SOON', 'SPOON', 'TUNE', 'NOON', 'BALLOON'], distractors: ['STAR', 'SUN', 'NIGHT'] },
+            { word: 'RAIN', emoji: '🌧️', rhymes: ['TRAIN', 'BRAIN', 'CHAIN', 'PLAIN', 'MAIN'], distractors: ['SUN', 'CLOUD', 'SNOW'] },
+            { word: 'BOAT', emoji: '⛵', rhymes: ['COAT', 'GOAT', 'FLOAT', 'NOTE'], distractors: ['SHIP', 'FISH', 'WAVE'] },
+            { word: 'KING', emoji: '👑', rhymes: ['RING', 'SING', 'WING', 'BRING', 'SPRING'], distractors: ['QUEEN', 'CROWN', 'GOLD'] },
+            { word: 'BELL', emoji: '🔔', rhymes: ['WELL', 'TELL', 'SELL', 'SHELL', 'SMELL'], distractors: ['RING', 'DING', 'SOUND'] },
+            { word: 'SNAKE', emoji: '🐍', rhymes: ['LAKE', 'CAKE', 'BAKE', 'MAKE', 'WAKE'], distractors: ['WORM', 'FROG', 'LIZARD'] },
+        ];
+
+        // Emoji mappings for choice words
+        const wordEmojis = {
+            'HAT': '🎩', 'BAT': '🦇', 'MAT': '🧹', 'RAT': '🐀', 'SAT': '🪑',
+            'LOG': '🪵', 'FOG': '🌫️', 'HOG': '🐗', 'JOG': '🏃', 'FROG': '🐸',
+            'TREE': '🌳', 'KEY': '🔑', 'SEE': '👀', 'FREE': '🕊️', 'THREE': '3️⃣',
+            'WIG': '💇', 'BIG': '🐘', 'DIG': '⛏️', 'FIG': '🍇', 'JIG': '💃',
+            'PEN': '🖊️', 'TEN': '🔟', 'MEN': '👨', 'DEN': '🏠', 'WHEN': '⏰',
+            'HUG': '🤗', 'MUG': '☕', 'RUG': '🧶', 'TUG': '🚢', 'SLUG': '🐌',
+            'BOX': '📦', 'SOX': '🧦', 'ROCKS': '🪨', 'LOCKS': '🔒', 'BLOCKS': '🧱',
+            'TRUCK': '🚚', 'LUCK': '🍀', 'STUCK': '🪤', 'PLUCK': '🎸', 'CHUCK': '🤾',
+            'DISH': '🍽️', 'WISH': '🌟', 'SWISH': '🏀',
+            'HAIR': '💇', 'CHAIR': '🪑', 'FAIR': '🎡', 'STAIR': '🪜', 'CARE': '❤️',
+            'HOUSE': '🏠', 'BLOUSE': '👚',
+            'BAKE': '👨‍🍳', 'LAKE': '🏞️', 'MAKE': '🔧', 'WAKE': '⏰', 'SHAKE': '🤝',
+            'CAR': '🚗', 'JAR': '🫙', 'FAR': '🔭', 'BAR': '🍫',
+            'SOON': '⏳', 'SPOON': '🥄', 'TUNE': '🎵', 'NOON': '☀️', 'BALLOON': '🎈',
+            'TRAIN': '🚂', 'BRAIN': '🧠', 'CHAIN': '⛓️', 'PLAIN': '🌾', 'MAIN': '🎯',
+            'COAT': '🧥', 'GOAT': '🐐', 'FLOAT': '🛟', 'NOTE': '📝',
+            'RING': '💍', 'SING': '🎤', 'WING': '🪶', 'BRING': '🎁', 'SPRING': '🌸',
+            'WELL': '🪣', 'TELL': '🗣️', 'SELL': '💰', 'SHELL': '🐚', 'SMELL': '👃',
+            // Distractors
+            'DOG': '🐕', 'CUP': '☕', 'SUN': '☀️', 'CAT': '🐱', 'BEE': '🐝', 'PIE': '🥧',
+            'BUG': '🐛', 'PIG': '🐷', 'COW': '🐄', 'HEN': '🐔', 'EGG': '🥚',
+            'ANT': '🐜', 'BIRD': '🐦', 'FISH': '🐟', 'CRAB': '🦀',
+            'WOLF': '🐺', 'DEER': '🦌', 'TOAD': '🐸', 'CHEESE': '🧀',
+            'BREAD': '🍞', 'FOOD': '🍔', 'MOON': '🌙', 'SKY': '🌌', 'NIGHT': '🌃',
+            'CLOUD': '☁️', 'SNOW': '❄️', 'SHIP': '🚢', 'WAVE': '🌊',
+            'QUEEN': '👸', 'CROWN': '👑', 'GOLD': '🪙', 'SOUND': '🔊', 'DING': '🛎️',
+            'WORM': '🪱', 'LIZARD': '🦎'
+        };
+
+        let score = 0;
+        let trainCars = [];
+        let currentRhyme = null;
+        let usedRhymes = [];
+        let streak = 0;
+        let gameActive = false;
+
+        // Create clouds
+        function createClouds() {
+            for (let i = 0; i < 5; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+                cloud.style.width = (80 + Math.random() * 60) + 'px';
+                cloud.style.height = (40 + Math.random() * 30) + 'px';
+                cloud.style.top = (50 + Math.random() * 150) + 'px';
+                cloud.style.animationDelay = (i * 4) + 's';
+                cloud.style.animationDuration = (15 + Math.random() * 10) + 's';
+                document.body.appendChild(cloud);
+            }
+        }
+
+        // Text to speech
+        function speakWord(word) {
+            if ('speechSynthesis' in window) {
+                speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.rate = 0.8;
+                utterance.pitch = 1.1;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Start game
+        function startGame() {
+            document.getElementById('startScreen').classList.add('hidden');
+            score = 0;
+            trainCars = [];
+            usedRhymes = [];
+            streak = 0;
+            gameActive = true;
+            updateHUD();
+            renderTrain();
+            nextRhyme();
+        }
+
+        // Next rhyme challenge
+        function nextRhyme() {
+            // Get unused rhyme sets
+            const available = rhymeSets.filter(r => !usedRhymes.includes(r.word));
+
+            if (available.length === 0) {
+                // All rhymes used - game complete!
+                gameComplete();
+                return;
+            }
+
+            // Pick random rhyme set
+            currentRhyme = available[Math.floor(Math.random() * available.length)];
+            usedRhymes.push(currentRhyme.word);
+
+            // Update passenger display
+            document.getElementById('passengerEmoji').textContent = currentRhyme.emoji;
+            document.getElementById('passengerWord').textContent = currentRhyme.word;
+            document.getElementById('rhymeWith').textContent = currentRhyme.word;
+
+            // Speak the word
+            setTimeout(() => speakWord(currentRhyme.word), 300);
+
+            // Create choices (1 correct + 2-3 distractors)
+            const correctAnswer = currentRhyme.rhymes[Math.floor(Math.random() * currentRhyme.rhymes.length)];
+            const numDistractors = Math.min(3, currentRhyme.distractors.length);
+            const shuffledDistractors = [...currentRhyme.distractors].sort(() => Math.random() - 0.5);
+            const choices = [correctAnswer, ...shuffledDistractors.slice(0, numDistractors)];
+
+            // Shuffle choices
+            choices.sort(() => Math.random() - 0.5);
+
+            // Render choices
+            const choicesEl = document.getElementById('choices');
+            choicesEl.innerHTML = '';
+
+            choices.forEach(word => {
+                const card = document.createElement('div');
+                card.className = 'choice-card';
+                card.innerHTML = `
+                    <span class="choice-emoji">${wordEmojis[word] || '❓'}</span>
+                    <span class="choice-word">${word}</span>
+                `;
+                card.onclick = () => handleChoice(card, word, correctAnswer);
+                choicesEl.appendChild(card);
+            });
+        }
+
+        // Handle choice
+        function handleChoice(card, chosen, correct) {
+            if (!gameActive) return;
+            gameActive = false;
+
+            // Disable all cards
+            document.querySelectorAll('.choice-card').forEach(c => c.style.pointerEvents = 'none');
+
+            if (chosen === correct) {
+                // Correct!
+                card.classList.add('correct');
+                streak++;
+                const points = 10 + (streak * 5);
+                score += points;
+
+                // Add train car
+                trainCars.push(currentRhyme.emoji);
+                renderTrain();
+
+                // Speak both words
+                speakWord(currentRhyme.word);
+                setTimeout(() => speakWord(chosen), 700);
+
+                updateHUD();
+
+                // Next rhyme
+                setTimeout(() => {
+                    gameActive = true;
+                    nextRhyme();
+                }, 1500);
+            } else {
+                // Wrong!
+                card.classList.add('wrong');
+                streak = 0;
+                updateHUD();
+
+                // Show correct answer
+                document.querySelectorAll('.choice-card').forEach(c => {
+                    if (c.querySelector('.choice-word').textContent === correct) {
+                        c.classList.add('correct');
+                    }
+                });
+
+                // Speak correct rhyme
+                setTimeout(() => {
+                    speakWord(currentRhyme.word + ' rhymes with ' + correct);
+                }, 500);
+
+                // Game over if train has cars, otherwise continue
+                if (trainCars.length > 0) {
+                    setTimeout(() => gameComplete(), 2000);
+                } else {
+                    setTimeout(() => {
+                        gameActive = true;
+                        nextRhyme();
+                    }, 2000);
+                }
+            }
+        }
+
+        // Render train
+        function renderTrain() {
+            const container = document.getElementById('trainContainer');
+            container.innerHTML = '<div class="engine">🚂</div>';
+
+            trainCars.forEach(emoji => {
+                const car = document.createElement('div');
+                car.className = 'train-car';
+                car.textContent = emoji;
+                container.appendChild(car);
+            });
+
+            // Move train if it gets too long
+            const trainWidth = 120 + (trainCars.length * 90);
+            if (trainWidth > window.innerWidth - 100) {
+                container.style.transform = `translateX(${window.innerWidth - trainWidth - 100}px)`;
+            }
+        }
+
+        // Update HUD
+        function updateHUD() {
+            document.getElementById('trainLength').textContent = trainCars.length;
+            document.getElementById('score').textContent = score;
+            document.getElementById('streak').textContent = 'Streak: ' + streak;
+        }
+
+        // Game complete
+        function gameComplete() {
+            gameActive = false;
+            const panel = document.getElementById('levelComplete');
+
+            document.getElementById('finalLength').textContent = trainCars.length;
+            document.getElementById('finalScore').textContent = score;
+
+            // Show mini train
+            const trainDisplay = document.getElementById('trainDisplay');
+            trainDisplay.textContent = '🚂 ' + trainCars.join(' ');
+
+            // Update title based on performance
+            const h2 = panel.querySelector('h2');
+            if (trainCars.length >= 15) {
+                h2.textContent = '🏆 Legendary Train!';
+            } else if (trainCars.length >= 10) {
+                h2.textContent = '🎉 Amazing Train!';
+            } else if (trainCars.length >= 5) {
+                h2.textContent = '🚂 Great Train!';
+            } else {
+                h2.textContent = '🚃 Good Try!';
+            }
+
+            panel.classList.remove('hidden');
+        }
+
+        // Play again
+        function playAgain() {
+            document.getElementById('levelComplete').classList.add('hidden');
+            document.getElementById('trainContainer').style.transform = '';
+            usedRhymes = [];
+            startGame();
+        }
+
+        // Initialize
+        createClouds();
+    </script>
+</body>
+</html>

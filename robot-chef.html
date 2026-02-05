@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Chef</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 20px;
+            z-index: 9999;
+            transition: all 0.2s;
+        }
+        .back-btn:hover {
+            background: rgba(0,0,0,0.8);
+            transform: scale(1.1);
+        }
+
+        /* Start Screen */
+        .start-screen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .start-screen.hidden { display: none; }
+
+        .start-title {
+            font-size: 3rem;
+            color: white;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+
+        .start-emoji {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: robotWave 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes robotWave {
+            from { transform: rotate(-10deg); }
+            to { transform: rotate(10deg); }
+        }
+
+        .start-box {
+            background: white;
+            border-radius: 25px;
+            padding: 30px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .start-box h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .how-to-play {
+            text-align: left;
+            margin-bottom: 25px;
+        }
+
+        .how-step {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .how-step .num {
+            width: 35px;
+            height: 35px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .how-step p {
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .start-btn {
+            padding: 18px 50px;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
+        }
+
+        /* Game Layout */
+        .game-container {
+            padding: 15px;
+            max-width: 900px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 15px;
+            margin-bottom: 15px;
+            margin-left: 50px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .level-stars {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            color: white;
+        }
+
+        .level-badge {
+            background: #FFD700;
+            color: #333;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        /* Recipe Goal */
+        .recipe-goal {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .recipe-goal h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .recipe-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .recipe-arrow {
+            color: #667eea;
+            font-size: 2rem;
+        }
+
+        /* Kitchen Area */
+        .kitchen {
+            background: linear-gradient(180deg, #e8f4f8 0%, #d4e5ea 100%);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 4px solid #a8c5cf;
+            position: relative;
+        }
+
+        .kitchen-floor {
+            background: linear-gradient(90deg, #c9a86c 0%, #b8956b 50%, #c9a86c 100%);
+            height: 40px;
+            border-radius: 0 0 15px 15px;
+            margin: 20px -20px -20px -20px;
+        }
+
+        .stations-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            min-height: 180px;
+            padding-bottom: 10px;
+        }
+
+        .station {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .station-counter {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 15px;
+            border: 4px solid #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .station.robot-here .station-counter {
+            border-color: #FFD700;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+        }
+
+        .robot-on-station {
+            position: absolute;
+            top: -55px;
+            font-size: 2.8rem;
+            animation: robotBob 0.6s ease-in-out infinite;
+        }
+
+        @keyframes robotBob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .station-label {
+            margin-top: 10px;
+            background: #667eea;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .station.robot-here .station-label {
+            background: #FFD700;
+            color: #333;
+        }
+
+        /* Robot Holding Display */
+        .robot-holding {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: rgba(102, 126, 234, 0.9);
+            padding: 10px 20px;
+            border-radius: 15px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .robot-holding span {
+            font-size: 2rem;
+        }
+
+        /* Action Cards */
+        .action-section {
+            background: rgba(255,255,255,0.15);
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .action-title {
+            color: white;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .action-cards {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-card {
+            width: 100px;
+            height: 110px;
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 4px solid #ddd;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .action-card:hover:not(.disabled) {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .action-card.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .action-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+
+        .action-card .label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+
+        .action-card.move { border-color: #27ae60; }
+        .action-card.move:hover:not(.disabled) { background: #e8f8f0; }
+
+        .action-card.grab { border-color: #e67e22; }
+        .action-card.grab:hover:not(.disabled) { background: #fef5e7; }
+
+        .action-card.cook { border-color: #e74c3c; }
+        .action-card.cook:hover:not(.disabled) { background: #fdedec; }
+
+        /* Program Section */
+        .program-section {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .program-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .program-title {
+            color: #667eea;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .program-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .program-btn {
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .program-btn:hover { transform: scale(1.05); }
+
+        .program-btn.run {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+        }
+
+        .program-btn.clear {
+            background: linear-gradient(135deg, #e74c3c, #ec7063);
+            color: white;
+        }
+
+        .program-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 80px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+            border: 3px dashed #ccc;
+        }
+
+        .program-card {
+            padding: 10px 15px;
+            background: white;
+            border-radius: 10px;
+            border: 3px solid;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .program-card:hover {
+            opacity: 0.7;
+            text-decoration: line-through;
+        }
+
+        .program-card.running {
+            animation: cardPulse 0.5s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+        }
+
+        @keyframes cardPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .program-card.move { border-color: #27ae60; color: #27ae60; }
+        .program-card.grab { border-color: #e67e22; color: #e67e22; }
+        .program-card.cook { border-color: #e74c3c; color: #e74c3c; }
+
+        .empty-program {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            width: 100%;
+            padding: 20px;
+        }
+
+        /* Hint */
+        .hint-bar {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 10px 15px;
+            margin-top: 15px;
+            color: #856404;
+            text-align: center;
+        }
+
+        /* Success/Error Overlay */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+        }
+
+        .overlay.hidden { display: none; }
+
+        .overlay-box {
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .overlay-box.success { border: 5px solid #27ae60; }
+        .overlay-box.error { border: 5px solid #e74c3c; }
+
+        .overlay-icon {
+            font-size: 5rem;
+            margin-bottom: 15px;
+        }
+
+        .overlay-title {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .overlay-box.success .overlay-title { color: #27ae60; }
+        .overlay-box.error .overlay-title { color: #e74c3c; }
+
+        .overlay-text {
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+        }
+
+        .overlay-btn {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .overlay-btn:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-btn" title="Back to Games">🏠</a>
+
+    <!-- Start Screen -->
+    <div class="start-screen" id="startScreen">
+        <h1 class="start-title">Robot Chef</h1>
+        <div class="start-emoji">🤖</div>
+        <div class="start-box">
+            <h2>Teach the Robot to Cook!</h2>
+            <div class="how-to-play">
+                <div class="how-step">
+                    <div class="num">1</div>
+                    <p>Look at the <strong>recipe</strong> to see what to make</p>
+                </div>
+                <div class="how-step">
+                    <div class="num">2</div>
+                    <p>Click <strong>action cards</strong> to tell the robot what to do</p>
+                </div>
+                <div class="how-step">
+                    <div class="num">3</div>
+                    <p>Press <strong>RUN</strong> and watch the robot cook!</p>
+                </div>
+            </div>
+            <button class="start-btn" onclick="startGame()">Let's Cook! 🍳</button>
+        </div>
+    </div>
+
+    <!-- Game -->
+    <div class="game-container">
+        <div class="header">
+            <h1>🤖 Robot Chef</h1>
+            <div class="level-stars">
+                <div class="level-badge">Level <span id="levelNum">1</span></div>
+                <div>⭐ <span id="stars">0</span></div>
+            </div>
+        </div>
+
+        <!-- Recipe Goal -->
+        <div class="recipe-goal">
+            <h2>📋 Make: <span id="recipeName">Toast</span></h2>
+            <div class="recipe-visual" id="recipeVisual"></div>
+        </div>
+
+        <!-- Kitchen -->
+        <div class="kitchen">
+            <div class="robot-holding">
+                🤖 Holding: <span id="holding">nothing</span>
+            </div>
+            <div class="stations-container" id="stations"></div>
+            <div class="kitchen-floor"></div>
+        </div>
+
+        <!-- Action Cards -->
+        <div class="action-section">
+            <div class="action-title">👆 Click cards to add commands:</div>
+            <div class="action-cards" id="actionCards"></div>
+        </div>
+
+        <!-- Program -->
+        <div class="program-section">
+            <div class="program-header">
+                <div class="program-title">📝 Your Program:</div>
+                <div class="program-btns">
+                    <button class="program-btn run" onclick="runProgram()">▶ RUN</button>
+                    <button class="program-btn clear" onclick="clearProgram()">✕ CLEAR</button>
+                </div>
+            </div>
+            <div class="program-cards" id="programCards">
+                <div class="empty-program">Click action cards above to build your program!</div>
+            </div>
+            <div class="hint-bar" id="hintBar">💡 Start by moving to the Bread, then pick it up!</div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay hidden" id="overlay">
+        <div class="overlay-box" id="overlayBox">
+            <div class="overlay-icon" id="overlayIcon">🎉</div>
+            <h2 class="overlay-title" id="overlayTitle">Yummy!</h2>
+            <p class="overlay-text" id="overlayText">You made delicious toast!</p>
+            <button class="overlay-btn" onclick="closeOverlay()">Continue</button>
+        </div>
+    </div>
+
+    <script>
+        // Simple recipes
+        const recipes = [
+            {
+                name: "Toast",
+                visual: ['🍞', '➡️', '🔥', '➡️', '🍽️'],
+                stations: [
+                    { id: 'bread', emoji: '🍞', label: 'Bread', hasItem: true, itemEmoji: '🍞' },
+                    { id: 'toaster', emoji: '🔥', label: 'Toaster', isCooker: true, cooksTo: '🍞' },
+                    { id: 'plate', emoji: '🍽️', label: 'Plate', isGoal: true }
+                ],
+                result: '🍞',
+                resultName: 'toast',
+                hints: [
+                    "Move to the Bread",
+                    "Pick up the bread",
+                    "Move to the Toaster",
+                    "Put it in the Toaster",
+                    "Press Cook!",
+                    "Pick up the toast",
+                    "Move to the Plate",
+                    "Put it on the Plate!"
+                ]
+            },
+            {
+                name: "Fried Egg",
+                visual: ['🥚', '➡️', '🍳', '➡️', '🍽️'],
+                stations: [
+                    { id: 'egg', emoji: '🥚', label: 'Egg', hasItem: true, itemEmoji: '🥚' },
+                    { id: 'pan', emoji: '🍳', label: 'Pan', isCooker: true, cooksTo: '🥚' },
+                    { id: 'plate', emoji: '🍽️', label: 'Plate', isGoal: true }
+                ],
+                result: '🍳',
+                resultName: 'fried egg',
+                hints: [
+                    "Move to the Egg",
+                    "Pick up the egg",
+                    "Move to the Pan",
+                    "Put it in the Pan",
+                    "Press Cook!",
+                    "Pick up the fried egg",
+                    "Move to the Plate",
+                    "Put it on the Plate!"
+                ]
+            },
+            {
+                name: "Salad",
+                visual: ['🥬', '➡️', '🥗', '➡️', '🍽️'],
+                stations: [
+                    { id: 'lettuce', emoji: '🥬', label: 'Lettuce', hasItem: true, itemEmoji: '🥬' },
+                    { id: 'bowl', emoji: '🥗', label: 'Bowl', isCooker: true, cooksTo: '🥬', cookLabel: 'Mix' },
+                    { id: 'plate', emoji: '🍽️', label: 'Plate', isGoal: true }
+                ],
+                result: '🥗',
+                resultName: 'salad',
+                hints: [
+                    "Move to the Lettuce",
+                    "Pick up the lettuce",
+                    "Move to the Bowl",
+                    "Put it in the Bowl",
+                    "Press Mix!",
+                    "Pick up the salad",
+                    "Move to the Plate",
+                    "Put it on the Plate!"
+                ]
+            }
+        ];
+
+        // Game state
+        let state = {
+            level: 0,
+            stars: 0,
+            robotPos: 0,
+            holding: null,
+            stationContents: {},
+            program: [],
+            hintIndex: 0,
+            running: false
+        };
+
+        function startGame() {
+            document.getElementById('startScreen').classList.add('hidden');
+            initLevel();
+        }
+
+        function initLevel() {
+            const recipe = recipes[state.level];
+            state.robotPos = 0;
+            state.holding = null;
+            state.stationContents = {};
+            state.program = [];
+            state.hintIndex = 0;
+            state.running = false;
+
+            // Initialize station contents
+            recipe.stations.forEach(s => {
+                if (s.hasItem) {
+                    state.stationContents[s.id] = s.itemEmoji;
+                }
+            });
+
+            // Update UI
+            document.getElementById('levelNum').textContent = state.level + 1;
+            document.getElementById('recipeName').textContent = recipe.name;
+
+            // Recipe visual
+            const visualEl = document.getElementById('recipeVisual');
+            visualEl.innerHTML = recipe.visual.map(item =>
+                item === '➡️' ? `<span class="recipe-arrow">➡️</span>` : `<span>${item}</span>`
+            ).join('');
+
+            renderKitchen();
+            renderActions();
+            renderProgram();
+            updateHint();
+        }
+
+        function renderKitchen() {
+            const recipe = recipes[state.level];
+            const stationsEl = document.getElementById('stations');
+            stationsEl.innerHTML = '';
+
+            recipe.stations.forEach((station, index) => {
+                const isHere = index === state.robotPos;
+                const content = state.stationContents[station.id] || station.emoji;
+
+                const div = document.createElement('div');
+                div.className = `station ${isHere ? 'robot-here' : ''}`;
+                div.innerHTML = `
+                    ${isHere ? '<div class="robot-on-station">🤖</div>' : ''}
+                    <div class="station-counter">${content}</div>
+                    <div class="station-label">${station.label}</div>
+                `;
+                stationsEl.appendChild(div);
+            });
+
+            // Update holding display
+            document.getElementById('holding').textContent = state.holding || 'nothing';
+        }
+
+        function renderActions() {
+            const recipe = recipes[state.level];
+            const currentStation = recipe.stations[state.robotPos];
+            const cardsEl = document.getElementById('actionCards');
+            cardsEl.innerHTML = '';
+
+            // Left
+            const canLeft = state.robotPos > 0;
+            cardsEl.appendChild(createActionCard('⬅️', 'Move Left', 'move', canLeft, () => addCommand('left', '⬅️ Left', 'move')));
+
+            // Right
+            const canRight = state.robotPos < recipe.stations.length - 1;
+            cardsEl.appendChild(createActionCard('➡️', 'Move Right', 'move', canRight, () => addCommand('right', '➡️ Right', 'move')));
+
+            // Pick Up
+            const canPickUp = !state.holding && state.stationContents[currentStation.id];
+            cardsEl.appendChild(createActionCard('✋', 'Pick Up', 'grab', canPickUp, () => addCommand('pickup', '✋ Pick Up', 'grab')));
+
+            // Put Down
+            const canPutDown = state.holding && (currentStation.isCooker || currentStation.isGoal);
+            cardsEl.appendChild(createActionCard('📥', 'Put Down', 'grab', canPutDown, () => addCommand('putdown', '📥 Put Down', 'grab')));
+
+            // Cook/Mix
+            if (currentStation.isCooker) {
+                const canCook = state.stationContents[currentStation.id] && !state.holding;
+                const cookLabel = currentStation.cookLabel || 'Cook';
+                cardsEl.appendChild(createActionCard('🔥', cookLabel + '!', 'cook', canCook, () => addCommand('cook', `🔥 ${cookLabel}!`, 'cook')));
+            }
+        }
+
+        function createActionCard(icon, label, type, enabled, onClick) {
+            const card = document.createElement('div');
+            card.className = `action-card ${type} ${enabled ? '' : 'disabled'}`;
+            card.innerHTML = `
+                <div class="icon">${icon}</div>
+                <div class="label">${label}</div>
+            `;
+            if (enabled) {
+                card.onclick = onClick;
+            }
+            return card;
+        }
+
+        function addCommand(type, label, cardType) {
+            if (state.running) return;
+
+            state.program.push({ type, label, cardType });
+
+            // Simulate the action to update available actions
+            simulateCommand(type);
+
+            state.hintIndex++;
+            renderActions();
+            renderProgram();
+            updateHint();
+        }
+
+        function simulateCommand(type) {
+            const recipe = recipes[state.level];
+            const currentStation = recipe.stations[state.robotPos];
+
+            switch (type) {
+                case 'left':
+                    if (state.robotPos > 0) state.robotPos--;
+                    break;
+                case 'right':
+                    if (state.robotPos < recipe.stations.length - 1) state.robotPos++;
+                    break;
+                case 'pickup':
+                    if (state.stationContents[currentStation.id]) {
+                        state.holding = state.stationContents[currentStation.id];
+                        delete state.stationContents[currentStation.id];
+                    }
+                    break;
+                case 'putdown':
+                    if (state.holding) {
+                        state.stationContents[currentStation.id] = state.holding;
+                        state.holding = null;
+                    }
+                    break;
+                case 'cook':
+                    if (currentStation.isCooker && state.stationContents[currentStation.id]) {
+                        state.stationContents[currentStation.id] = recipe.result;
+                    }
+                    break;
+            }
+            renderKitchen();
+        }
+
+        function renderProgram() {
+            const cardsEl = document.getElementById('programCards');
+
+            if (state.program.length === 0) {
+                cardsEl.innerHTML = '<div class="empty-program">Click action cards above to build your program!</div>';
+                return;
+            }
+
+            cardsEl.innerHTML = '';
+            state.program.forEach((cmd, index) => {
+                const card = document.createElement('div');
+                card.className = `program-card ${cmd.cardType}`;
+                card.textContent = cmd.label;
+                card.onclick = () => removeCommand(index);
+                cardsEl.appendChild(card);
+            });
+        }
+
+        function removeCommand(index) {
+            if (state.running) return;
+
+            // Remove this command and rebuild state
+            state.program.splice(index, 1);
+            rebuildState();
+            renderActions();
+            renderProgram();
+        }
+
+        function rebuildState() {
+            const recipe = recipes[state.level];
+            state.robotPos = 0;
+            state.holding = null;
+            state.stationContents = {};
+
+            recipe.stations.forEach(s => {
+                if (s.hasItem) {
+                    state.stationContents[s.id] = s.itemEmoji;
+                }
+            });
+
+            // Replay all commands
+            state.program.forEach(cmd => {
+                const currentStation = recipe.stations[state.robotPos];
+                switch (cmd.type) {
+                    case 'left':
+                        if (state.robotPos > 0) state.robotPos--;
+                        break;
+                    case 'right':
+                        if (state.robotPos < recipe.stations.length - 1) state.robotPos++;
+                        break;
+                    case 'pickup':
+                        if (state.stationContents[currentStation.id]) {
+                            state.holding = state.stationContents[currentStation.id];
+                            delete state.stationContents[currentStation.id];
+                        }
+                        break;
+                    case 'putdown':
+                        if (state.holding) {
+                            state.stationContents[currentStation.id] = state.holding;
+                            state.holding = null;
+                        }
+                        break;
+                    case 'cook':
+                        if (currentStation.isCooker && state.stationContents[currentStation.id]) {
+                            state.stationContents[currentStation.id] = recipe.result;
+                        }
+                        break;
+                }
+            });
+
+            renderKitchen();
+        }
+
+        function updateHint() {
+            const recipe = recipes[state.level];
+            const hintEl = document.getElementById('hintBar');
+
+            if (state.hintIndex < recipe.hints.length) {
+                hintEl.textContent = '💡 ' + recipe.hints[state.hintIndex];
+            } else {
+                hintEl.textContent = '💡 Looking good! Press RUN to test your program!';
+            }
+        }
+
+        function clearProgram() {
+            if (state.running) return;
+            state.program = [];
+            state.hintIndex = 0;
+            initLevel();
+        }
+
+        async function runProgram() {
+            if (state.running || state.program.length === 0) return;
+
+            state.running = true;
+
+            // Reset to beginning
+            const recipe = recipes[state.level];
+            state.robotPos = 0;
+            state.holding = null;
+            state.stationContents = {};
+            recipe.stations.forEach(s => {
+                if (s.hasItem) {
+                    state.stationContents[s.id] = s.itemEmoji;
+                }
+            });
+            renderKitchen();
+
+            await sleep(400);
+
+            // Execute each command
+            const cardEls = document.querySelectorAll('.program-card');
+
+            for (let i = 0; i < state.program.length; i++) {
+                cardEls[i].classList.add('running');
+
+                await executeCommand(state.program[i].type);
+                renderKitchen();
+
+                await sleep(600);
+                cardEls[i].classList.remove('running');
+            }
+
+            // Check win
+            const goalStation = recipe.stations.find(s => s.isGoal);
+            if (state.stationContents[goalStation.id] === recipe.result) {
+                // Win!
+                state.stars += 3;
+                document.getElementById('stars').textContent = state.stars;
+                showOverlay(true, recipe.result, 'Delicious!', `You made ${recipe.resultName}! ⭐⭐⭐`);
+            } else {
+                showOverlay(false, '🤔', 'Not quite!', 'The food needs to be on the plate. Try again!');
+            }
+
+            state.running = false;
+        }
+
+        async function executeCommand(type) {
+            const recipe = recipes[state.level];
+            const currentStation = recipe.stations[state.robotPos];
+
+            switch (type) {
+                case 'left':
+                    if (state.robotPos > 0) state.robotPos--;
+                    break;
+                case 'right':
+                    if (state.robotPos < recipe.stations.length - 1) state.robotPos++;
+                    break;
+                case 'pickup':
+                    if (state.stationContents[currentStation.id]) {
+                        state.holding = state.stationContents[currentStation.id];
+                        delete state.stationContents[currentStation.id];
+                    }
+                    break;
+                case 'putdown':
+                    if (state.holding) {
+                        state.stationContents[currentStation.id] = state.holding;
+                        state.holding = null;
+                    }
+                    break;
+                case 'cook':
+                    if (currentStation.isCooker && state.stationContents[currentStation.id]) {
+                        state.stationContents[currentStation.id] = recipe.result;
+                    }
+                    break;
+            }
+        }
+
+        function showOverlay(success, icon, title, text) {
+            const overlay = document.getElementById('overlay');
+            const box = document.getElementById('overlayBox');
+
+            box.className = `overlay-box ${success ? 'success' : 'error'}`;
+            document.getElementById('overlayIcon').textContent = icon;
+            document.getElementById('overlayTitle').textContent = title;
+            document.getElementById('overlayText').textContent = text;
+
+            overlay.classList.remove('hidden');
+        }
+
+        function closeOverlay() {
+            document.getElementById('overlay').classList.add('hidden');
+
+            const box = document.getElementById('overlayBox');
+            if (box.classList.contains('success')) {
+                // Next level
+                state.level = (state.level + 1) % recipes.length;
+                if (state.level === 0) state.stars = 0; // Reset after all levels
+            }
+            initLevel();
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>

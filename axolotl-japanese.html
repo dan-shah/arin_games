@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axolotl Japanese Adventure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard', cursive;
+            background: linear-gradient(180deg, #0a3d62 0%, #1e5f74 30%, #133b5c 70%, #0c2a3e 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 20px;
+            z-index: 9999;
+            transition: all 0.2s;
+        }
+        .back-btn:hover {
+            background: rgba(0,0,0,0.8);
+            transform: scale(1.1);
+        }
+
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Underwater effects */
+        .bubble {
+            position: absolute;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(255,255,255,0.2));
+            border-radius: 50%;
+            animation: rise linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rise {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0.7;
+            }
+            50% {
+                transform: translateY(-50vh) translateX(20px);
+            }
+            100% {
+                transform: translateY(-100vh) translateX(-20px);
+                opacity: 0;
+            }
+        }
+
+        .seaweed {
+            position: absolute;
+            bottom: 0;
+            width: 30px;
+            background: linear-gradient(to top, #2d5a27, #4a9c3f);
+            border-radius: 50% 50% 0 0;
+            animation: sway 3s ease-in-out infinite;
+            transform-origin: bottom center;
+        }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(-10deg); }
+            50% { transform: rotate(10deg); }
+        }
+
+        .sand {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(to top, #c2956e, #d4a574, #e8c9a0);
+            border-radius: 100% 100% 0 0 / 30px 30px 0 0;
+        }
+
+        .light-rays {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: repeating-linear-gradient(
+                100deg,
+                transparent,
+                transparent 50px,
+                rgba(255,255,255,0.03) 50px,
+                rgba(255,255,255,0.03) 100px
+            );
+            animation: shimmer 8s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(100px); }
+        }
+
+        /* Axolotl */
+        .axolotl {
+            position: absolute;
+            width: 120px;
+            height: 80px;
+            transition: all 0.8s ease-out;
+            z-index: 10;
+        }
+
+        .axolotl-body {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .axolotl-main {
+            position: absolute;
+            width: 80px;
+            height: 50px;
+            background: linear-gradient(135deg, #ffb6c1, #ff91a4);
+            border-radius: 50px 30px 30px 50px;
+            left: 20px;
+            top: 15px;
+            box-shadow: inset -5px -5px 15px rgba(255,255,255,0.3);
+        }
+
+        .axolotl-head {
+            position: absolute;
+            width: 45px;
+            height: 40px;
+            background: linear-gradient(135deg, #ffb6c1, #ff91a4);
+            border-radius: 50%;
+            left: 0;
+            top: 18px;
+            box-shadow: inset -3px -3px 10px rgba(255,255,255,0.3);
+        }
+
+        .axolotl-eye {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #1a1a1a;
+            border-radius: 50%;
+            top: 12px;
+        }
+
+        .axolotl-eye.left { left: 8px; }
+        .axolotl-eye.right { left: 22px; }
+
+        .axolotl-eye::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+        }
+
+        .axolotl-smile {
+            position: absolute;
+            width: 15px;
+            height: 8px;
+            border: 3px solid #ff6b8a;
+            border-top: none;
+            border-radius: 0 0 15px 15px;
+            top: 26px;
+            left: 13px;
+            background: transparent;
+        }
+
+        .axolotl-gill {
+            position: absolute;
+            width: 25px;
+            height: 8px;
+            top: 5px;
+        }
+
+        .axolotl-gill.left {
+            left: -5px;
+            transform: rotate(-30deg);
+        }
+
+        .axolotl-gill.right {
+            left: 25px;
+            transform: rotate(30deg);
+        }
+
+        .gill-branch {
+            position: absolute;
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(to top, #ff6b8a, #ff91a4);
+            border-radius: 2px;
+            transform-origin: bottom center;
+            animation: gillWave 2s ease-in-out infinite;
+        }
+
+        .gill-branch:nth-child(1) { left: 0; animation-delay: 0s; }
+        .gill-branch:nth-child(2) { left: 8px; animation-delay: 0.2s; }
+        .gill-branch:nth-child(3) { left: 16px; animation-delay: 0.4s; }
+
+        @keyframes gillWave {
+            0%, 100% { transform: rotate(-15deg); }
+            50% { transform: rotate(15deg); }
+        }
+
+        .axolotl-tail {
+            position: absolute;
+            width: 35px;
+            height: 25px;
+            background: linear-gradient(90deg, #ff91a4, #ffb6c1);
+            right: 0;
+            top: 25px;
+            border-radius: 0 50% 50% 0;
+            animation: tailWag 1s ease-in-out infinite;
+            transform-origin: left center;
+        }
+
+        @keyframes tailWag {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        .axolotl-leg {
+            position: absolute;
+            width: 15px;
+            height: 20px;
+            background: #ffb6c1;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .axolotl-leg.front-left { left: 25px; top: 55px; }
+        .axolotl-leg.front-right { left: 55px; top: 55px; }
+        .axolotl-leg.back-left { left: 35px; top: 58px; }
+        .axolotl-leg.back-right { left: 65px; top: 58px; }
+
+        /* Game UI */
+        .start-screen, .game-over-screen, .fact-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 100;
+            background: rgba(0, 50, 80, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            border: 4px solid #4ecdc4;
+            box-shadow: 0 0 30px rgba(78, 205, 196, 0.5);
+        }
+
+        .start-screen h1 {
+            font-size: 2.5em;
+            color: #ffb6c1;
+            text-shadow: 3px 3px 0 #ff6b8a;
+            margin-bottom: 20px;
+        }
+
+        .start-screen p {
+            color: #a8e6cf;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .start-btn, .next-btn {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.5em;
+            font-family: inherit;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(78, 205, 196, 0.4);
+        }
+
+        .start-btn:hover, .next-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 30px rgba(78, 205, 196, 0.6);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* HUD */
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 50;
+        }
+
+        .hud-box {
+            background: rgba(0, 50, 80, 0.8);
+            padding: 10px 20px;
+            border-radius: 15px;
+            border: 3px solid #4ecdc4;
+            color: white;
+            font-size: 1.2em;
+        }
+
+        .score-display {
+            color: #ffd93d;
+        }
+
+        .level-display {
+            color: #a8e6cf;
+        }
+
+        /* Question display */
+        .question-area {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 50;
+        }
+
+        .question-prompt {
+            color: #a8e6cf;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .question-word {
+            font-size: 3em;
+            color: white;
+            text-shadow: 3px 3px 0 #4ecdc4;
+            background: rgba(0, 50, 80, 0.8);
+            padding: 15px 40px;
+            border-radius: 20px;
+            border: 4px solid #ffb6c1;
+        }
+
+        /* Paths */
+        .path {
+            position: absolute;
+            bottom: 150px;
+            width: 200px;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 20;
+        }
+
+        .path:hover {
+            transform: scale(1.05);
+        }
+
+        .path.left {
+            left: 10%;
+        }
+
+        .path.right {
+            right: 10%;
+        }
+
+        .path-bubble {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px 40px;
+            border-radius: 30px;
+            font-size: 2em;
+            color: #0a3d62;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            border: 4px solid #4ecdc4;
+        }
+
+        .path:hover .path-bubble {
+            background: #a8e6cf;
+            transform: translateY(-10px);
+        }
+
+        .path-arrow {
+            font-size: 3em;
+            margin-top: 10px;
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        .path.left .path-arrow {
+            color: #ff6b8a;
+        }
+
+        .path.right .path-arrow {
+            color: #4ecdc4;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Feedback */
+        .feedback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4em;
+            z-index: 200;
+            opacity: 0;
+            transition: all 0.5s;
+            pointer-events: none;
+        }
+
+        .feedback.show {
+            opacity: 1;
+            animation: popIn 0.5s ease-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .feedback.correct {
+            color: #4ecdc4;
+            text-shadow: 0 0 20px rgba(78, 205, 196, 0.8);
+        }
+
+        .feedback.wrong {
+            color: #ff6b6b;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
+        }
+
+        /* Fact screen */
+        .fact-screen h2 {
+            font-size: 2em;
+            color: #ffd93d;
+            margin-bottom: 20px;
+        }
+
+        .fact-screen .fact-emoji {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .fact-screen .fact-text {
+            font-size: 1.3em;
+            color: white;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            max-width: 500px;
+        }
+
+        /* Progress bar */
+        .progress-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            z-index: 50;
+        }
+
+        .progress-label {
+            color: white;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: rgba(0, 50, 80, 0.8);
+            border-radius: 10px;
+            border: 2px solid #4ecdc4;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b8a, #ffb6c1);
+            border-radius: 8px;
+            transition: width 0.3s;
+        }
+
+        /* Fish decorations */
+        .fish {
+            position: absolute;
+            font-size: 2em;
+            animation: swim linear infinite;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        @keyframes swim {
+            0% { transform: translateX(-100px) scaleX(-1); }
+            49% { transform: translateX(calc(100vw + 100px)) scaleX(-1); }
+            50% { transform: translateX(calc(100vw + 100px)) scaleX(1); }
+            100% { transform: translateX(-100px) scaleX(1); }
+        }
+
+        /* Combo display */
+        .combo-display {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            background: rgba(255, 107, 138, 0.9);
+            padding: 10px 20px;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.2em;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .combo-display.show {
+            opacity: 1;
+        }
+
+        /* Game over */
+        .game-over-screen h2 {
+            font-size: 2.5em;
+            color: #ffd93d;
+            margin-bottom: 20px;
+        }
+
+        .game-over-screen .final-score {
+            font-size: 3em;
+            color: #4ecdc4;
+            margin-bottom: 10px;
+        }
+
+        .game-over-screen .message {
+            font-size: 1.3em;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        /* Color preview for color questions */
+        .color-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 15px;
+            vertical-align: middle;
+            border: 3px solid white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-btn" title="Back to Games">🏠</a>
+    <div class="game-container">
+        <!-- Underwater effects -->
+        <div class="light-rays"></div>
+        <div class="sand"></div>
+
+        <!-- HUD -->
+        <div class="hud hidden" id="hud">
+            <div class="hud-box">
+                <span class="score-display">Stars: <span id="score">0</span></span>
+            </div>
+            <div class="hud-box">
+                <span class="level-display">Level <span id="level">1</span></span>
+            </div>
+        </div>
+
+        <!-- Combo display -->
+        <div class="combo-display" id="combo-display">
+            Combo: <span id="combo">0</span>x
+        </div>
+
+        <!-- Question area -->
+        <div class="question-area hidden" id="question-area">
+            <div class="question-prompt" id="question-prompt">What is this in Japanese?</div>
+            <div class="question-word" id="question-word"></div>
+        </div>
+
+        <!-- Axolotl -->
+        <div class="axolotl" id="axolotl">
+            <div class="axolotl-body">
+                <div class="axolotl-gill left">
+                    <div class="gill-branch"></div>
+                    <div class="gill-branch"></div>
+                    <div class="gill-branch"></div>
+                </div>
+                <div class="axolotl-gill right">
+                    <div class="gill-branch"></div>
+                    <div class="gill-branch"></div>
+                    <div class="gill-branch"></div>
+                </div>
+                <div class="axolotl-head">
+                    <div class="axolotl-eye left"></div>
+                    <div class="axolotl-eye right"></div>
+                    <div class="axolotl-smile"></div>
+                </div>
+                <div class="axolotl-main"></div>
+                <div class="axolotl-tail"></div>
+                <div class="axolotl-leg front-left"></div>
+                <div class="axolotl-leg front-right"></div>
+                <div class="axolotl-leg back-left"></div>
+                <div class="axolotl-leg back-right"></div>
+            </div>
+        </div>
+
+        <!-- Paths -->
+        <div class="path left hidden" id="path-left">
+            <div class="path-bubble" id="answer-left"></div>
+            <div class="path-arrow">&#8592;</div>
+        </div>
+        <div class="path right hidden" id="path-right">
+            <div class="path-bubble" id="answer-right"></div>
+            <div class="path-arrow">&#8594;</div>
+        </div>
+
+        <!-- Progress -->
+        <div class="progress-container hidden" id="progress-container">
+            <div class="progress-label">Round <span id="round">1</span> of <span id="max-rounds">5</span></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+
+        <!-- Feedback -->
+        <div class="feedback" id="feedback"></div>
+
+        <!-- Start screen -->
+        <div class="start-screen" id="start-screen">
+            <h1>Axolotl Japanese Adventure!</h1>
+            <p>Help the cute axolotl swim through<br>the ocean by learning Japanese!<br><br>
+            Learn colors and numbers 1-10!<br>
+            Pick the correct path to earn stars!</p>
+            <button class="start-btn" id="start-btn">Let's Swim!</button>
+        </div>
+
+        <!-- Fact screen -->
+        <div class="fact-screen hidden" id="fact-screen">
+            <h2>Fun Fact!</h2>
+            <div class="fact-emoji" id="fact-emoji"></div>
+            <div class="fact-text" id="fact-text"></div>
+            <button class="next-btn" id="next-btn">Keep Swimming!</button>
+        </div>
+
+        <!-- Game over screen -->
+        <div class="game-over-screen hidden" id="game-over-screen">
+            <h2>Amazing Job!</h2>
+            <div class="final-score" id="final-score"></div>
+            <div class="message" id="game-over-message"></div>
+            <button class="start-btn" id="restart-btn">Play Again!</button>
+        </div>
+    </div>
+
+    <script>
+        // Japanese vocabulary
+        const vocabulary = {
+            colors: [
+                { english: 'Red', japanese: 'Aka', hiragana: 'あか', color: '#ff4444' },
+                { english: 'Blue', japanese: 'Ao', hiragana: 'あお', color: '#4444ff' },
+                { english: 'Green', japanese: 'Midori', hiragana: 'みどり', color: '#44aa44' },
+                { english: 'Yellow', japanese: 'Kiiro', hiragana: 'きいろ', color: '#ffdd00' },
+                { english: 'Orange', japanese: 'Orenji', hiragana: 'オレンジ', color: '#ff8800' },
+                { english: 'Purple', japanese: 'Murasaki', hiragana: 'むらさき', color: '#8844aa' },
+                { english: 'Pink', japanese: 'Pinku', hiragana: 'ピンク', color: '#ff88aa' },
+                { english: 'Black', japanese: 'Kuro', hiragana: 'くろ', color: '#222222' },
+                { english: 'White', japanese: 'Shiro', hiragana: 'しろ', color: '#ffffff' },
+                { english: 'Brown', japanese: 'Chairo', hiragana: 'ちゃいろ', color: '#8b4513' }
+            ],
+            numbers: [
+                { english: '1', japanese: 'Ichi', hiragana: 'いち' },
+                { english: '2', japanese: 'Ni', hiragana: 'に' },
+                { english: '3', japanese: 'San', hiragana: 'さん' },
+                { english: '4', japanese: 'Yon', hiragana: 'よん' },
+                { english: '5', japanese: 'Go', hiragana: 'ご' },
+                { english: '6', japanese: 'Roku', hiragana: 'ろく' },
+                { english: '7', japanese: 'Nana', hiragana: 'なな' },
+                { english: '8', japanese: 'Hachi', hiragana: 'はち' },
+                { english: '9', japanese: 'Kyuu', hiragana: 'きゅう' },
+                { english: '10', japanese: 'Juu', hiragana: 'じゅう' }
+            ]
+        };
+
+        // 100 Fun facts about Japanese culture for kids
+        const funFacts = [
+            { emoji: '🗻', text: 'Mount Fuji is the tallest mountain in Japan! Many people climb it every summer.' },
+            { emoji: '🍣', text: 'Sushi was invented in Japan! It started as a way to keep fish fresh using rice.' },
+            { emoji: '🎎', text: 'In Japan, there\'s a special holiday called Hinamatsuri (Doll Festival) where families display beautiful dolls!' },
+            { emoji: '🚄', text: 'Japan has super fast bullet trains called Shinkansen that can go over 200 miles per hour!' },
+            { emoji: '🌸', text: 'Cherry blossoms (sakura) are Japan\'s favorite flower. People have picnics under the trees when they bloom!' },
+            { emoji: '🎌', text: 'The Japanese flag has a red circle on white. The circle represents the sun!' },
+            { emoji: '🏯', text: 'Japan has beautiful castles! Some are over 400 years old.' },
+            { emoji: '🥢', text: 'In Japan, people eat with chopsticks called "hashi". Kids learn to use them when they\'re little!' },
+            { emoji: '🎋', text: 'On Tanabata festival, kids write wishes on colorful paper and hang them on bamboo!' },
+            { emoji: '🐉', text: 'Dragons in Japanese stories are often good and bring rain for the crops!' },
+            { emoji: '👘', text: 'The kimono is a beautiful traditional Japanese robe that people wear for special occasions!' },
+            { emoji: '🎏', text: 'On Children\'s Day, families fly fish-shaped flags called koinobori outside their homes!' },
+            { emoji: '🍜', text: 'Ramen noodles were invented in Japan! There are many yummy flavors.' },
+            { emoji: '🐱', text: 'The lucky cat statue (Maneki-neko) waves its paw to bring good fortune!' },
+            { emoji: '🎮', text: 'Many popular video games like Mario and Pokemon come from Japan!' },
+            { emoji: '📚', text: 'Manga (Japanese comics) are read from right to left, opposite of English books!' },
+            { emoji: '🍵', text: 'Tea ceremonies in Japan are very special and can take hours!' },
+            { emoji: '🗾', text: 'Japan is made up of over 6,800 islands!' },
+            { emoji: '🎭', text: 'Japanese theater has cool masks and costumes that tell stories!' },
+            { emoji: '🍱', text: 'Bento boxes are special lunch boxes with different yummy foods arranged beautifully!' },
+            { emoji: '🦌', text: 'In Nara, Japan, friendly deer roam freely and bow to people for treats!' },
+            { emoji: '⛩️', text: 'Torii gates are bright red/orange gates at Japanese shrines. They mark sacred places!' },
+            { emoji: '🎐', text: 'Wind chimes (furin) make pretty sounds in summer to help people feel cool!' },
+            { emoji: '🐙', text: 'Takoyaki are yummy octopus balls - a popular street food in Japan!' },
+            { emoji: '🛁', text: 'Japanese baths (ofuro) are for soaking and relaxing, not washing!' },
+            { emoji: '🏔️', text: 'Japan has lots of hot springs called onsen where water comes warm from the ground!' },
+            { emoji: '🍙', text: 'Onigiri are triangle-shaped rice balls, often wrapped in seaweed!' },
+            { emoji: '🎪', text: 'Japanese festivals (matsuri) have colorful floats, music, and yummy food!' },
+            { emoji: '🐕', text: 'The Akita and Shiba Inu are famous Japanese dog breeds!' },
+            { emoji: '🎨', text: 'Origami is the Japanese art of folding paper into animals and shapes!' },
+            { emoji: '🌊', text: 'The famous painting "The Great Wave" was made by Japanese artist Hokusai!' },
+            { emoji: '🥋', text: 'Martial arts like karate, judo, and aikido come from Japan!' },
+            { emoji: '🎹', text: 'The word "karaoke" comes from Japan! It means "empty orchestra".' },
+            { emoji: '🍡', text: 'Dango are sweet rice dumplings on a stick - a favorite Japanese treat!' },
+            { emoji: '🐟', text: 'Koi fish are colorful carp that symbolize good luck in Japan!' },
+            { emoji: '🏠', text: 'Traditional Japanese houses have sliding doors made of paper called shoji!' },
+            { emoji: '🎑', text: 'Moon viewing parties (Tsukimi) celebrate the autumn full moon with dango!' },
+            { emoji: '🌺', text: 'Japan has four distinct seasons, and each one is celebrated!' },
+            { emoji: '🦊', text: 'In Japanese stories, foxes (kitsune) are magical and can change shape!' },
+            { emoji: '🎍', text: 'New Year\'s (Oshogatsu) is the biggest holiday in Japan!' },
+            { emoji: '🍰', text: 'Japanese Christmas cake is a fluffy strawberry shortcake - yum!' },
+            { emoji: '🎠', text: 'Tokyo Disneyland was the first Disney park outside the United States!' },
+            { emoji: '🦑', text: 'Japan has vending machines for almost everything - even hot soup!' },
+            { emoji: '📮', text: 'Japanese mailboxes are red and have a cute rounded top!' },
+            { emoji: '🎒', text: 'Japanese students carry special backpacks called randoseru!' },
+            { emoji: '🧹', text: 'Students in Japan clean their own classrooms - no janitors needed!' },
+            { emoji: '🛎️', text: 'In Japan, it\'s polite to say "Itadakimasu" before eating!' },
+            { emoji: '🙇', text: 'Bowing is how Japanese people greet each other respectfully!' },
+            { emoji: '👞', text: 'You always take off your shoes before entering a Japanese home!' },
+            { emoji: '🎁', text: 'Gift-giving is very important in Japan. Gifts are wrapped beautifully!' },
+            { emoji: '🚃', text: 'Japanese trains are so punctual, they apologize for being even 1 minute late!' },
+            { emoji: '🗼', text: 'Tokyo Tower looks like the Eiffel Tower but is painted orange and white!' },
+            { emoji: '🌙', text: 'Japanese people see a rabbit in the moon, not a man!' },
+            { emoji: '🐰', text: 'There\'s an island in Japan full of friendly bunnies!' },
+            { emoji: '🐈', text: 'There\'s also a cat island where cats outnumber people!' },
+            { emoji: '🦝', text: 'Tanuki (raccoon dogs) are playful tricksters in Japanese stories!' },
+            { emoji: '👺', text: 'Tengu are mythical creatures with long noses who live in mountains!' },
+            { emoji: '🎃', text: 'Obon festival honors ancestors with lanterns and dancing!' },
+            { emoji: '💮', text: 'Cherry blossom season only lasts about two weeks!' },
+            { emoji: '🍃', text: 'Japanese gardens are designed to look natural and peaceful!' },
+            { emoji: '🎵', text: 'Taiko drums are huge drums played at festivals and ceremonies!' },
+            { emoji: '🪭', text: 'Japanese fans (sensu) are beautiful and help keep cool in summer!' },
+            { emoji: '🧧', text: 'Kids get special envelopes with money called otoshidama on New Year\'s!' },
+            { emoji: '🍢', text: 'Oden is a warm winter dish with different foods cooked in broth!' },
+            { emoji: '🍛', text: 'Curry rice is one of the most popular foods in Japan!' },
+            { emoji: '🥟', text: 'Gyoza are delicious dumplings, crispy on the bottom!' },
+            { emoji: '🍦', text: 'Japan has unusual ice cream flavors like green tea and sweet potato!' },
+            { emoji: '🧊', text: 'Kakigori is fluffy shaved ice with yummy syrup - perfect for summer!' },
+            { emoji: '🎐', text: 'Cicadas sing loudly in Japan every summer!' },
+            { emoji: '🦋', text: 'Japanese people love watching fireflies (hotaru) in summer!' },
+            { emoji: '🏃', text: 'There\'s a special kids\' sport called undokai with relay races and games!' },
+            { emoji: '📝', text: 'Japanese has three writing systems: hiragana, katakana, and kanji!' },
+            { emoji: '✍️', text: 'Shodo is the art of beautiful Japanese calligraphy!' },
+            { emoji: '🎴', text: 'Karuta is a fun card game where you match poems!' },
+            { emoji: '♟️', text: 'Shogi is Japanese chess with different rules and pieces!' },
+            { emoji: '🀄', text: 'Japanese kids play games like kendama (cup and ball) and ayatori (string figures)!' },
+            { emoji: '🪁', text: 'Giant kites are flown at festivals - some are huge!' },
+            { emoji: '🧵', text: 'Temari are beautiful handmade balls with colorful thread designs!' },
+            { emoji: '🪆', text: 'Kokeshi dolls are cute wooden dolls without arms or legs!' },
+            { emoji: '🎎', text: 'Daruma dolls are round red dolls that help you achieve goals!' },
+            { emoji: '🏮', text: 'Paper lanterns (chochin) light up festivals and restaurants!' },
+            { emoji: '🎆', text: 'Summer fireworks festivals (hanabi) are spectacular in Japan!' },
+            { emoji: '🌈', text: 'Japan has a rainy season called tsuyu in early summer!' },
+            { emoji: '☔', text: 'Japanese umbrellas can be made of beautiful oiled paper!' },
+            { emoji: '🧤', text: 'Kotatsu is a warm table with a blanket - perfect for winter!' },
+            { emoji: '🛷', text: 'Many Japanese people go skiing in the winter mountains!' },
+            { emoji: '🐵', text: 'Snow monkeys in Japan take baths in hot springs to stay warm!' },
+            { emoji: '🐻', text: 'Japan has bears, deer, and even wild boars living in forests!' },
+            { emoji: '🦅', text: 'The Japanese crane (tsuru) is a symbol of long life and good luck!' },
+            { emoji: '🐢', text: 'In Japan, turtles represent wisdom and long life!' },
+            { emoji: '🐲', text: 'Ryujin is the dragon king who lives in an underwater palace!' },
+            { emoji: '⚡', text: 'Raijin is the thunder god who makes storms with his drums!' },
+            { emoji: '🌬️', text: 'Fujin is the wind god who carries winds in a big bag!' },
+            { emoji: '🌟', text: 'Amaterasu is the sun goddess - one of the most important in Japan!' },
+            { emoji: '🐇', text: 'The story of the moon rabbit says bunnies make rice cakes on the moon!' },
+            { emoji: '🎋', text: 'Tanabata celebrates two star-crossed lovers who meet once a year!' },
+            { emoji: '👨‍👩‍👧‍👦', text: 'Respect for elders is very important in Japanese culture!' },
+            { emoji: '📖', text: 'Japan has one of the highest literacy rates in the world!' },
+            { emoji: '🏫', text: 'The Japanese school year starts in April, with cherry blossoms!' },
+            { emoji: '🎓', text: 'Japanese students often belong to after-school clubs!' }
+        ];
+
+        // Game state
+        let state = {
+            score: 0,
+            level: 1,
+            round: 1,
+            maxRounds: 5,
+            combo: 0,
+            maxCombo: 0,
+            currentQuestion: null,
+            correctAnswer: null,
+            correctSide: null,
+            usedFacts: [],
+            gameRunning: false
+        };
+
+        // DOM elements
+        const gameContainer = document.querySelector('.game-container');
+        const startScreen = document.getElementById('start-screen');
+        const startBtn = document.getElementById('start-btn');
+        const hud = document.getElementById('hud');
+        const scoreEl = document.getElementById('score');
+        const levelEl = document.getElementById('level');
+        const questionArea = document.getElementById('question-area');
+        const questionPrompt = document.getElementById('question-prompt');
+        const questionWord = document.getElementById('question-word');
+        const pathLeft = document.getElementById('path-left');
+        const pathRight = document.getElementById('path-right');
+        const answerLeft = document.getElementById('answer-left');
+        const answerRight = document.getElementById('answer-right');
+        const axolotl = document.getElementById('axolotl');
+        const feedback = document.getElementById('feedback');
+        const progressContainer = document.getElementById('progress-container');
+        const progressFill = document.getElementById('progress-fill');
+        const roundEl = document.getElementById('round');
+        const maxRoundsEl = document.getElementById('max-rounds');
+        const factScreen = document.getElementById('fact-screen');
+        const factEmoji = document.getElementById('fact-emoji');
+        const factText = document.getElementById('fact-text');
+        const nextBtn = document.getElementById('next-btn');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScore = document.getElementById('final-score');
+        const gameOverMessage = document.getElementById('game-over-message');
+        const restartBtn = document.getElementById('restart-btn');
+        const comboDisplay = document.getElementById('combo-display');
+        const comboEl = document.getElementById('combo');
+
+        // Initialize bubbles
+        function createBubbles() {
+            for (let i = 0; i < 15; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                const size = Math.random() * 20 + 10;
+                bubble.style.width = size + 'px';
+                bubble.style.height = size + 'px';
+                bubble.style.left = Math.random() * 100 + '%';
+                bubble.style.bottom = '-50px';
+                bubble.style.animationDuration = (Math.random() * 5 + 5) + 's';
+                bubble.style.animationDelay = (Math.random() * 5) + 's';
+                gameContainer.appendChild(bubble);
+            }
+        }
+
+        // Initialize seaweed
+        function createSeaweed() {
+            const positions = [5, 15, 85, 92];
+            positions.forEach(pos => {
+                const seaweed = document.createElement('div');
+                seaweed.className = 'seaweed';
+                seaweed.style.left = pos + '%';
+                seaweed.style.height = (Math.random() * 80 + 60) + 'px';
+                seaweed.style.animationDelay = (Math.random() * 2) + 's';
+                gameContainer.appendChild(seaweed);
+            });
+        }
+
+        // Initialize fish
+        function createFish() {
+            const fishEmojis = ['🐠', '🐟', '🐡', '🦈', '🐙'];
+            for (let i = 0; i < 4; i++) {
+                const fish = document.createElement('div');
+                fish.className = 'fish';
+                fish.textContent = fishEmojis[Math.floor(Math.random() * fishEmojis.length)];
+                fish.style.top = (Math.random() * 60 + 15) + '%';
+                fish.style.animationDuration = (Math.random() * 15 + 15) + 's';
+                fish.style.animationDelay = (Math.random() * 10) + 's';
+                gameContainer.appendChild(fish);
+            }
+        }
+
+        // Position axolotl at center
+        function resetAxolotl() {
+            axolotl.style.left = 'calc(50% - 60px)';
+            axolotl.style.bottom = '180px';
+        }
+
+        // Get random vocabulary item
+        function getRandomVocab() {
+            const allVocab = [...vocabulary.colors, ...vocabulary.numbers];
+            return allVocab[Math.floor(Math.random() * allVocab.length)];
+        }
+
+        // Get wrong answer from same category
+        function getWrongAnswer(correct) {
+            const isColor = vocabulary.colors.includes(correct);
+            const category = isColor ? vocabulary.colors : vocabulary.numbers;
+            let wrong;
+            do {
+                wrong = category[Math.floor(Math.random() * category.length)];
+            } while (wrong === correct);
+            return wrong;
+        }
+
+        // Generate a question
+        function generateQuestion() {
+            const vocab = getRandomVocab();
+            const wrongVocab = getWrongAnswer(vocab);
+            const askJapanese = Math.random() > 0.5;
+            const correctOnLeft = Math.random() > 0.5;
+
+            state.currentQuestion = vocab;
+            state.correctSide = correctOnLeft ? 'left' : 'right';
+
+            if (askJapanese) {
+                // Show English, ask for Japanese
+                questionPrompt.textContent = 'What is this in Japanese?';
+
+                if (vocab.color) {
+                    questionWord.innerHTML = vocab.english + `<span class="color-preview" style="background-color: ${vocab.color}"></span>`;
+                } else {
+                    questionWord.textContent = vocab.english;
+                }
+
+                state.correctAnswer = vocab.japanese;
+
+                if (correctOnLeft) {
+                    answerLeft.textContent = vocab.japanese;
+                    answerRight.textContent = wrongVocab.japanese;
+                } else {
+                    answerLeft.textContent = wrongVocab.japanese;
+                    answerRight.textContent = vocab.japanese;
+                }
+            } else {
+                // Show Japanese, ask for English
+                questionPrompt.textContent = 'What does this mean in English?';
+                questionWord.textContent = vocab.japanese;
+
+                state.correctAnswer = vocab.english;
+
+                if (vocab.color) {
+                    const correctDisplay = vocab.english + `<span class="color-preview" style="background-color: ${vocab.color}"></span>`;
+                    const wrongDisplay = wrongVocab.english + `<span class="color-preview" style="background-color: ${wrongVocab.color}"></span>`;
+
+                    if (correctOnLeft) {
+                        answerLeft.innerHTML = correctDisplay;
+                        answerRight.innerHTML = wrongDisplay;
+                    } else {
+                        answerLeft.innerHTML = wrongDisplay;
+                        answerRight.innerHTML = correctDisplay;
+                    }
+                } else {
+                    if (correctOnLeft) {
+                        answerLeft.textContent = vocab.english;
+                        answerRight.textContent = wrongVocab.english;
+                    } else {
+                        answerLeft.textContent = wrongVocab.english;
+                        answerRight.textContent = vocab.english;
+                    }
+                }
+            }
+        }
+
+        // Handle answer selection
+        function selectAnswer(side) {
+            if (!state.gameRunning) return;
+            state.gameRunning = false;
+
+            const correct = side === state.correctSide;
+
+            // Move axolotl
+            if (side === 'left') {
+                axolotl.style.left = '15%';
+            } else {
+                axolotl.style.left = '70%';
+            }
+
+            // Show feedback
+            if (correct) {
+                state.combo++;
+                if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+
+                const points = 100 + (state.combo * 10) + (state.level * 20);
+                state.score += points;
+
+                feedback.textContent = '⭐ Correct! +' + points;
+                feedback.className = 'feedback correct show';
+
+                comboEl.textContent = state.combo;
+                if (state.combo >= 2) {
+                    comboDisplay.classList.add('show');
+                }
+            } else {
+                state.combo = 0;
+                feedback.textContent = '❌ Oops!';
+                feedback.className = 'feedback wrong show';
+                comboDisplay.classList.remove('show');
+            }
+
+            scoreEl.textContent = state.score;
+
+            // Next round after delay
+            setTimeout(() => {
+                feedback.classList.remove('show');
+                resetAxolotl();
+
+                state.round++;
+
+                if (state.round > state.maxRounds) {
+                    // Level complete - show fact
+                    showFact();
+                } else {
+                    updateProgress();
+                    generateQuestion();
+                    state.gameRunning = true;
+                }
+            }, 1500);
+        }
+
+        // Show fun fact
+        function showFact() {
+            questionArea.classList.add('hidden');
+            pathLeft.classList.add('hidden');
+            pathRight.classList.add('hidden');
+            progressContainer.classList.add('hidden');
+            comboDisplay.classList.remove('show');
+
+            // Get unused fact
+            let factIndex;
+            do {
+                factIndex = Math.floor(Math.random() * funFacts.length);
+            } while (state.usedFacts.includes(factIndex) && state.usedFacts.length < funFacts.length);
+
+            state.usedFacts.push(factIndex);
+            const fact = funFacts[factIndex];
+
+            factEmoji.textContent = fact.emoji;
+            factText.textContent = fact.text;
+            factScreen.classList.remove('hidden');
+        }
+
+        // Continue to next level
+        function continueGame() {
+            factScreen.classList.add('hidden');
+
+            state.level++;
+            state.round = 1;
+
+            if (state.level > 10) {
+                // Game complete!
+                showGameOver();
+            } else {
+                levelEl.textContent = state.level;
+                updateProgress();
+
+                questionArea.classList.remove('hidden');
+                pathLeft.classList.remove('hidden');
+                pathRight.classList.remove('hidden');
+                progressContainer.classList.remove('hidden');
+
+                generateQuestion();
+                state.gameRunning = true;
+            }
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            roundEl.textContent = state.round;
+            const percent = ((state.round - 1) / state.maxRounds) * 100;
+            progressFill.style.width = percent + '%';
+        }
+
+        // Show game over
+        function showGameOver() {
+            hud.classList.add('hidden');
+            questionArea.classList.add('hidden');
+            pathLeft.classList.add('hidden');
+            pathRight.classList.add('hidden');
+            progressContainer.classList.add('hidden');
+
+            finalScore.textContent = state.score + ' Stars!';
+
+            if (state.score > 5000) {
+                gameOverMessage.textContent = 'You\'re a Japanese master! すごい (Sugoi - Amazing)!';
+            } else if (state.score > 3000) {
+                gameOverMessage.textContent = 'Great job! You\'re learning fast!';
+            } else {
+                gameOverMessage.textContent = 'Good try! Keep practicing!';
+            }
+
+            gameOverScreen.classList.remove('hidden');
+        }
+
+        // Start game
+        function startGame() {
+            state = {
+                score: 0,
+                level: 1,
+                round: 1,
+                maxRounds: 5,
+                combo: 0,
+                maxCombo: 0,
+                currentQuestion: null,
+                correctAnswer: null,
+                correctSide: null,
+                usedFacts: [],
+                gameRunning: true
+            };
+
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            hud.classList.remove('hidden');
+            questionArea.classList.remove('hidden');
+            pathLeft.classList.remove('hidden');
+            pathRight.classList.remove('hidden');
+            progressContainer.classList.remove('hidden');
+
+            scoreEl.textContent = '0';
+            levelEl.textContent = '1';
+            maxRoundsEl.textContent = state.maxRounds;
+
+            resetAxolotl();
+            updateProgress();
+            generateQuestion();
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+        nextBtn.addEventListener('click', continueGame);
+
+        pathLeft.addEventListener('click', () => selectAnswer('left'));
+        pathRight.addEventListener('click', () => selectAnswer('right'));
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (!state.gameRunning) return;
+
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                selectAnswer('left');
+            } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                selectAnswer('right');
+            }
+        });
+
+        // Initialize
+        createBubbles();
+        createSeaweed();
+        createFish();
+        resetAxolotl();
+    </script>
+</body>
+</html>
