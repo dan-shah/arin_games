@@ -6,11 +6,11 @@ A collection of educational (and fun!) games built for a 6-year-old Kindergartne
 
 ## The Story
 
-In January 2026, Arin was home from school because of snow and cold. He was bored, walking around the house with nothing to do. His dad (me) asked him, "What's 9 + 6?" and Arin said he didn't like math.
+In January 2026, Arin was home from school because of snow and cold. I (his dad) wanted to keep on the momentum from school (which he loves). I asked him, "What's 9 + 6?" to which Arin responded that he didn't want 'math'. Fair. Not very engaging.
 
-Sounded like a challenge! Using [Claude Code](https://claude.ai/code), the first game was built on the spot to make math engaging, personalized and fun. Arin had a blast.
+In the spirit of 90s games like Math Blasters, I was curious if I could take school work that was brought home and morph or personalize them into games that he could enjoy while building on some of the foundational skills. I used [Claude Code](https://claude.ai/code), got some input from Arin and the first game was built. Arin had a blast.
 
-That sparked a journey of building games around stuff Arin was learning at school — math, sight words, spelling, patterns, and even Japanese. Along the way, the games incorporated his favorite things: orcas, axolotls, robots, and outer space.
+That sparked a journey of building more games based upon what it seemed like Arin was learning at school — math, sight words, spelling, patterns, and even Japanese. Along the way, the games incorporated his favorite things: orcas, axolotls, robots, and outer space.
 
 Every game here was built by a dad + AI, tweaked by his son. Hope it inspires!
 
